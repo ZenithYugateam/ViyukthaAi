@@ -1,0 +1,13 @@
+project_id = "ybpnizylrmsilnmlzslz"
+
+[functions.resume-analysis]
+verify_jwt = false
+
+[functions.analyze-resume]
+verify_jwt = false
+
+[functions.generate-resume]
+verify_jwt = false
+
+[functions.ai-interview]
+verify_jwt = false
