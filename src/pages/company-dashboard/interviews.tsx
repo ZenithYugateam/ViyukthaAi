@@ -4,13 +4,35 @@ import TopNav from "@/components/company-dashboard/TopNav";
 import { PageTransition } from "@/components/company-dashboard/PageTransition";
 import { mockData, Interview } from "@/data/mock-company-dashboard";
 import { motion, AnimatePresence } from "framer-motion";
-
-type InterviewStatus = "Ongoing" | "Completed" | "Scheduled";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Download, MessageSquare, FileText, Calendar, CheckSquare, Square } from "lucide-react";
+import {
+  Card,
+  CardContent
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import {
+  Download,
+  FileText,
+  Calendar,
+  CheckSquare,
+  Square,
+  ArrowLeft,
+  X
+} from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { scheduleSystem } from "@/data/schedules";
@@ -21,13 +43,15 @@ import { Textarea } from "@/components/ui/textarea";
 const InterviewsPage: React.FC = () => {
   const navigate = useNavigate();
   const [interviews, setInterviews] = React.useState(() => mockData.getInterviews());
-  const [filter, setFilter] = React.useState<"All" | InterviewStatus>("All");
+  const [filter, setFilter] = React.useState<"All" | "Ongoing" | "Completed" | "Scheduled">("All");
   const [selectedInterview, setSelectedInterview] = React.useState<Interview | null>(null);
   const [selectedCandidates, setSelectedCandidates] = React.useState<Set<string>>(new Set());
   const [showScheduleModal, setShowScheduleModal] = React.useState(false);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const candidatesPerPage = 5;
 
   React.useEffect(() => {
-    // Refresh interviews when component mounts
+     // Refresh interviews when component mounts
     const refreshInterviews = () => setInterviews(mockData.getInterviews());
     window.addEventListener("focus", refreshInterviews);
     return () => window.removeEventListener("focus", refreshInterviews);
@@ -41,7 +65,7 @@ const InterviewsPage: React.FC = () => {
   const handleDownloadReport = (interviewId: string) => {
     toast.success(`Report for ${interviewId} downloaded successfully!`);
   };
-  
+
   const toggleCandidateSelection = (interviewId: string) => {
     setSelectedCandidates(prev => {
       const newSet = new Set(prev);
@@ -53,7 +77,7 @@ const InterviewsPage: React.FC = () => {
       return newSet;
     });
   };
-  
+
   const toggleSelectAll = () => {
     if (selectedCandidates.size === filtered.length) {
       setSelectedCandidates(new Set());
@@ -61,7 +85,7 @@ const InterviewsPage: React.FC = () => {
       setSelectedCandidates(new Set(filtered.map(i => i.id)));
     }
   };
-  
+
   const handleScheduleSelected = () => {
     if (selectedCandidates.size === 0) {
       toast.error("Please select at least one candidate");
@@ -76,247 +100,292 @@ const InterviewsPage: React.FC = () => {
         <Sidebar />
         <div className="flex-1 flex flex-col">
           <TopNav />
-        <main className="p-4 md:p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold">Interviews</h1>
-              {selectedCandidates.size > 0 && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {selectedCandidates.size} candidate{selectedCandidates.size > 1 ? 's' : ''} selected
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {selectedCandidates.size > 0 && (
-                <Button onClick={handleScheduleSelected}>
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Interview ({selectedCandidates.size})
-                </Button>
-              )}
-              <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  <SelectItem value="Ongoing">Ongoing</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
-                  <SelectItem value="Scheduled">Scheduled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={toggleSelectAll}
-                        className="h-8 w-8 p-0"
-                      >
-                        {selectedCandidates.size === filtered.length && filtered.length > 0 ? (
-                          <CheckSquare className="h-4 w-4" />
-                        ) : (
-                          <Square className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </TableHead>
-                    <TableHead>Job Title</TableHead>
-                    <TableHead>Candidates</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="h-64">
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="flex flex-col items-center justify-center gap-4 text-center">
-                          <MessageSquare className="h-12 w-12 text-muted-foreground" />
-                          <div>
-                            <h3 className="text-lg font-semibold mb-1">No interviews found</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {filter === "All" ? "No interviews scheduled yet" : `No ${filter.toLowerCase()} interviews`}
-                            </p>
-                          </div>
-                        </motion.div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filtered.map((interview) => (
-                    <TableRow key={interview.id}>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleCandidateSelection(interview.id)}
-                          className="h-8 w-8 p-0"
-                        >
-                          {selectedCandidates.has(interview.id) ? (
-                            <CheckSquare className="h-4 w-4 text-primary" />
-                          ) : (
-                            <Square className="h-4 w-4" />
-                          )}
+          <main className="p-4 md:p-6 space-y-4 relative">
+            <AnimatePresence mode="wait">
+              {!selectedInterview ? (
+                <motion.div
+                  key="list-view"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <h1 className="text-2xl font-semibold">Interviews</h1>
+                      {selectedCandidates.size > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {selectedCandidates.size} candidate
+                          {selectedCandidates.size > 1 ? "s" : ""} selected
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {selectedCandidates.size > 0 && (
+                        <Button onClick={handleScheduleSelected}>
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Schedule Interview ({selectedCandidates.size})
                         </Button>
-                      </TableCell>
-                      <TableCell className="font-medium">{interview.jobTitle}</TableCell>
-                      <TableCell>{interview.candidates}</TableCell>
-                      <TableCell>{interview.date}</TableCell>
-                      <TableCell>
-                        <span
-                          className={
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium " +
-                            (interview.status === "Completed"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : interview.status === "Ongoing"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-amber-100 text-amber-700")
-                          }
-                        >
-                          {interview.status}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedInterview(interview)}
-                        >
-                          View
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-
-      <AnimatePresence>
-        {selectedInterview && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40"
-              onClick={() => setSelectedInterview(null)}
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full md:w-[600px] bg-background border-l shadow-2xl z-50 overflow-y-auto"
-            >
-              <div className="p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-semibold">{selectedInterview.jobTitle}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedInterview.candidates} candidates • {selectedInterview.date}
-                    </p>
+                      )}
+                      <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+                        <SelectTrigger className="w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All">All</SelectItem>
+                          <SelectItem value="Ongoing">Ongoing</SelectItem>
+                          <SelectItem value="Completed">Completed</SelectItem>
+                          <SelectItem value="Scheduled">Scheduled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSelectedInterview(null)}
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDownloadReport(selectedInterview.id)}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Report
-                  </Button>
-                </div>
+                  {/* Slim Table */}
+                  <Card className="shadow-none border border-border">
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="h-8">
+                            <TableHead className="w-10 p-2"></TableHead>
+                            <TableHead className="text-xs font-medium">Job Title</TableHead>
+                            <TableHead className="text-xs font-medium">Candidates</TableHead>
+                            <TableHead className="text-xs font-medium">Date</TableHead>
+                            <TableHead className="text-xs font-medium">Status</TableHead>
+                            <TableHead className="text-right text-xs font-medium">Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filtered.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={6} className="h-40 text-center text-sm text-muted-foreground">
+                                No interviews found
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filtered.map((interview) => (
+                              <TableRow key={interview.id} className="h-10 hover:bg-muted/30">
+                                <TableCell className="p-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => toggleCandidateSelection(interview.id)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    {selectedCandidates.has(interview.id) ? (
+                                      <CheckSquare className="h-4 w-4 text-primary" />
+                                    ) : (
+                                      <Square className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </TableCell>
+                                <TableCell className="text-sm">{interview.jobTitle}</TableCell>
+                                <TableCell className="text-sm">{interview.candidates}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground">{interview.date}</TableCell>
+                                <TableCell>
+                                  <span
+                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                      interview.status === "Completed"
+                                        ? "bg-emerald-100 text-emerald-700"
+                                        : interview.status === "Ongoing"
+                                        ? "bg-blue-100 text-blue-700"
+                                        : "bg-amber-100 text-amber-700"
+                                    }`}
+                                  >
+                                    {interview.status}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs"
+                                    onClick={() => setSelectedInterview(interview)}
+                                  >
+                                    View
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ) : (
+                // DETAIL VIEW
+                <motion.div
+                  key="detail-view"
+                  initial={{ opacity: 0, x: 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -40 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="default"
+                        size="icon"
+                        className="rounded-full bg-primary text-white hover:bg-primary/90"
+                        onClick={() => setSelectedInterview(null)}
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </Button>
+                      <div>
+                        <h2 className="text-lg font-semibold">{selectedInterview.jobTitle}</h2>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedInterview.candidates} candidates • {selectedInterview.date}
+                        </p>
+                      </div>
+                    </div>
 
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium">Candidates</h3>
-                  {selectedInterview.candidateList.map((candidate) => (
-                    <Card key={candidate.id}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="text-base">{candidate.name}</CardTitle>
-                            <p className="text-sm text-muted-foreground">{candidate.email}</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-semibold">{candidate.score}</div>
-                            <div className="text-xs text-muted-foreground">Score</div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium">Status:</span>
-                            <span
-                              className={
-                                "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium " +
-                                (candidate.status === "Passed"
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : candidate.status === "Failed"
-                                  ? "bg-red-100 text-red-700"
-                                  : "bg-amber-100 text-amber-700")
-                              }
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 text-xs"
+                      onClick={() => handleDownloadReport(selectedInterview.id)}
+                    >
+                      <Download className="h-3.5 w-3.5 mr-2" />
+                      Download Report
+                    </Button>
+                  </div>
+
+                  {/* Candidates with Pagination */}
+                  <div className="overflow-hidden rounded-md border border-border">
+                    {(() => {
+                      const totalCandidates = selectedInterview.candidateList.length;
+                      const totalPages = Math.ceil(totalCandidates / candidatesPerPage);
+                      const startIndex = (currentPage - 1) * candidatesPerPage;
+                      const endIndex = startIndex + candidatesPerPage;
+                      const visibleCandidates = selectedInterview.candidateList.slice(startIndex, endIndex);
+
+                      return (
+                        <>
+                          {visibleCandidates.map((candidate, index) => (
+                            <div
+                              key={candidate.id}
+                              className={`grid grid-cols-12 items-center px-4 py-3 border-b last:border-0 transition-all hover:bg-muted/40 ${
+                                index % 2 === 1 ? "bg-muted/20" : "bg-background"
+                              }`}
                             >
-                              {candidate.status}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium mb-1">AI Remarks:</p>
-                            <p className="text-sm text-muted-foreground">{candidate.aiRemarks}</p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => navigate(`/company-dashboard/candidate/RPT-00${selectedInterview.candidateList.indexOf(candidate) + 1}`)}
-                          >
-                            <FileText className="h-4 w-4 mr-2" />
-                            View Detailed Report
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                              <div className="col-span-4 flex flex-col">
+                                <span className="font-medium text-sm">{candidate.name}</span>
+                                <span className="text-xs text-muted-foreground">{candidate.email}</span>
+                              </div>
 
-      {/* Bulk Schedule Modal */}
-      <BulkScheduleModal
-        show={showScheduleModal}
-        selectedCount={selectedCandidates.size}
-        selectedInterviews={interviews.filter(i => selectedCandidates.has(i.id))}
-        onClose={() => setShowScheduleModal(false)}
-        onSuccess={() => {
-          setSelectedCandidates(new Set());
-          setShowScheduleModal(false);
-        }}
-      />
+                              <div className="col-span-2">
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                                    candidate.status === "Passed"
+                                      ? "bg-emerald-100 text-emerald-700"
+                                      : candidate.status === "Failed"
+                                      ? "bg-red-100 text-red-700"
+                                      : "bg-amber-100 text-amber-700"
+                                  }`}
+                                >
+                                  {candidate.status}
+                                </span>
+                              </div>
+
+                              <div className="col-span-4 text-xs text-muted-foreground line-clamp-2 leading-snug max-h-[2.4em]">
+                                {candidate.aiRemarks}
+                              </div>
+
+                              <div className="col-span-2 flex justify-end items-center gap-3">
+                                <div className="text-right">
+                                  <div className="text-base font-semibold">{candidate.score}</div>
+                                  <div className="text-[10px] text-muted-foreground">Score</div>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2 text-[11px]"
+                                  onClick={() =>
+                                    navigate(
+                                      `/company-dashboard/candidate/RPT-00${
+                                        selectedInterview.candidateList.indexOf(candidate) + 1
+                                      }`
+                                    )
+                                  }
+                                >
+                                  <FileText className="h-3.5 w-3.5 mr-1" />
+                                  View
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Pagination Footer */}
+                          <div className="flex items-center justify-between px-4 py-3 bg-muted/10 border-t border-border text-xs text-muted-foreground">
+                            <span>
+                              Showing {startIndex + 1}–
+                              {endIndex > totalCandidates ? totalCandidates : endIndex} of {totalCandidates} candidates
+                            </span>
+
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-3 text-xs"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                              >
+                                Previous
+                              </Button>
+
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => (
+                                  <button
+                                    key={i}
+                                    onClick={() => setCurrentPage(i + 1)}
+                                    className={`h-7 w-7 rounded-md text-xs font-medium transition ${
+                                      currentPage === i + 1
+                                        ? "bg-primary text-white"
+                                        : "text-muted-foreground hover:bg-muted/40"
+                                    }`}
+                                  >
+                                    {i + 1}
+                                  </button>
+                                ))}
+                              </div>
+
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-3 text-xs"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                              >
+                                Next
+                              </Button>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </motion.div>
+
+              )}
+            </AnimatePresence>
+
+            {/* 🔹 Bulk Schedule Modal */}
+            <BulkScheduleModal
+              show={showScheduleModal}
+              selectedCount={selectedCandidates.size}
+              selectedInterviews={interviews.filter(i => selectedCandidates.has(i.id))}
+              onClose={() => setShowScheduleModal(false)}
+              onSuccess={() => {
+                setSelectedCandidates(new Set());
+                setShowScheduleModal(false);
+              }}
+            />
+          </main>
+        </div>
       </div>
     </PageTransition>
   );
@@ -348,7 +417,7 @@ const BulkScheduleModal: React.FC<{
       return;
     }
 
-    // Create schedules for all selected candidates
+      // Create schedules for all selected candidates
     let successCount = 0;
     selectedInterviews.forEach((interview) => {
       scheduleSystem.create({
