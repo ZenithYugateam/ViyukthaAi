@@ -5,33 +5,14 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarIcon, Plus, X, Sparkles } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight, Save } from "lucide-react";
+import { Stepper } from "@/components/company/Stepper";
+import { InterviewTypeSelector } from "@/components/company/InterviewTypeSelector";
+import { BasicJobDetails } from "@/components/company/BasicJobDetails";
+import { InterviewSpecificFields } from "@/components/company/InterviewSpecificFields";
+import { QuestionGeneration } from "@/components/company/QuestionGeneration";
+import { JobDescriptionStep } from "@/components/company/JobDescriptionStep";
 
 const jobFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
@@ -46,7 +27,24 @@ const jobFormSchema = z.object({
   deadline: z.date({
     required_error: "Application deadline is required",
   }),
-  interviewType: z.enum(["custom", "ai-generated"]),
+  interviewTypes: z.array(z.string()).min(1, "Select at least one interview type"),
+  hrInterview: z.object({
+    duration: z.string().optional(),
+    interviewer: z.string().optional(),
+    focusAreas: z.string().optional(),
+  }).optional(),
+  technicalInterview: z.object({
+    difficulty: z.string().optional(),
+    type: z.string().optional(),
+    technologies: z.string().optional(),
+    duration: z.string().optional(),
+  }).optional(),
+  mcqAssessment: z.object({
+    questionCount: z.string().optional(),
+    timePerQuestion: z.string().optional(),
+    categories: z.string().optional(),
+    passingScore: z.string().optional(),
+  }).optional(),
 });
 
 type JobFormData = z.infer<typeof jobFormSchema>;
@@ -54,9 +52,9 @@ type JobFormData = z.infer<typeof jobFormSchema>;
 export default function CreateJob() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [skillInput, setSkillInput] = useState("");
-  const [customQuestions, setCustomQuestions] = useState<Array<{ id: string; question: string; type: string }>>([]);
-  const [aiConfig, setAiConfig] = useState({ template: "technical", difficulty: "medium", questionCount: 5 });
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
 
   const form = useForm<JobFormData>({
     resolver: zodResolver(jobFormSchema),
@@ -68,39 +66,77 @@ export default function CreateJob() {
       jobType: "remote",
       description: "",
       skills: [],
-      interviewType: "custom",
+      interviewTypes: [],
+      hrInterview: {
+        duration: "60",
+        interviewer: "hr-manager",
+        focusAreas: "",
+      },
+      technicalInterview: {
+        difficulty: "mid",
+        type: "coding",
+        technologies: "",
+        duration: "90",
+      },
+      mcqAssessment: {
+        questionCount: "20",
+        timePerQuestion: "60",
+        categories: "",
+        passingScore: "70",
+      },
     },
   });
 
-  const skills = form.watch("skills") || [];
-  const interviewType = form.watch("interviewType");
+  const getSteps = () => {
+    const baseSteps = [
+      { id: "interview-type", title: "Interview Type", description: "Select assessment types" },
+      { id: "basic-details", title: "Basic Details", description: "Job information" },
+      { id: "job-description", title: "Job Description", description: "Role details & requirements" },
+    ];
 
-  const addSkill = () => {
-    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
-      form.setValue("skills", [...skills, skillInput.trim()]);
-      setSkillInput("");
+    if (selectedTypes.length > 0) {
+      baseSteps.splice(2, 0, {
+        id: "interview-fields",
+        title: "Interview Settings",
+        description: "Configure interview parameters"
+      });
+      baseSteps.splice(3, 0, {
+        id: "questions",
+        title: "Questions",
+        description: "Generate or add questions"
+      });
+    }
+
+    return baseSteps;
+  };
+
+  const steps = getSteps();
+
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
-  const removeSkill = (skill: string) => {
-    form.setValue("skills", skills.filter(s => s !== skill));
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
-  const addCustomQuestion = () => {
-    setCustomQuestions([
-      ...customQuestions,
-      { id: Date.now().toString(), question: "", type: "open-text" }
-    ]);
-  };
-
-  const removeCustomQuestion = (id: string) => {
-    setCustomQuestions(customQuestions.filter(q => q.id !== id));
+  const handleTypeSelection = (types: string[]) => {
+    setSelectedTypes(types);
+    form.setValue("interviewTypes", types);
   };
 
   const onSubmit = (data: JobFormData) => {
-    console.log("Job data:", data);
-    console.log("Custom questions:", customQuestions);
-    console.log("AI config:", aiConfig);
+    const finalData = {
+      ...data,
+      generatedQuestions,
+      interviewTypes: selectedTypes,
+    };
+    
+    console.log("Job data:", finalData);
     
     toast({
       title: "Job posted successfully!",
@@ -118,390 +154,143 @@ export default function CreateJob() {
     navigate("/company/jobs");
   };
 
+  const renderStepContent = () => {
+    const currentStepId = steps[currentStep]?.id;
+    
+    switch (currentStepId) {
+      case "interview-type":
+        return (
+          <InterviewTypeSelector
+            selectedTypes={selectedTypes}
+            onSelectionChange={handleTypeSelection}
+          />
+        );
+      
+      case "basic-details":
+        return <BasicJobDetails form={form} />;
+      
+      case "interview-fields":
+        return (
+          <InterviewSpecificFields
+            form={form}
+            selectedTypes={selectedTypes}
+          />
+        );
+      
+      case "questions":
+        return (
+          <QuestionGeneration
+            form={form}
+            selectedTypes={selectedTypes}
+            jobData={form.getValues()}
+          />
+        );
+      
+      case "job-description":
+        return (
+          <JobDescriptionStep
+            form={form}
+            jobData={form.getValues()}
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  const canProceedToNext = () => {
+    const currentStepId = steps[currentStep]?.id;
+    
+    switch (currentStepId) {
+      case "interview-type":
+        return selectedTypes.length > 0;
+      
+      case "basic-details":
+        const basicFields = ['title', 'department', 'location', 'deadline'];
+        return basicFields.every(field => form.getValues(field));
+      
+      case "interview-fields":
+        return true; // Fields are optional
+      
+      case "questions":
+        return true; // Questions can be empty
+      
+      case "job-description":
+        return form.getValues('description')?.length >= 50;
+      
+      default:
+        return false;
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Post New Job</h1>
         <p className="text-muted-foreground">
-          Create a new job posting and start receiving applications
+          Create a new job posting with step-by-step guidance
         </p>
       </div>
 
+      {/* Stepper */}
+      <Stepper steps={steps} currentStep={currentStep} />
+
+      {/* Form Content */}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>Essential details about the position</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Job Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Senior Frontend Engineer" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="department"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Department</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Engineering" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. San Francisco, CA" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="employmentType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Employment Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="full-time">Full-time</SelectItem>
-                          <SelectItem value="part-time">Part-time</SelectItem>
-                          <SelectItem value="contract">Contract</SelectItem>
-                          <SelectItem value="internship">Internship</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="jobType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Work Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="onsite">Onsite</SelectItem>
-                          <SelectItem value="remote">Remote</SelectItem>
-                          <SelectItem value="hybrid">Hybrid</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="salaryMin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Salary Min (Optional)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="e.g. 100000" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="salaryMax"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Salary Max (Optional)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="e.g. 150000" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="deadline"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Application Deadline</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormDescription>
-                      Applications will close on this date
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Job Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Job Description</CardTitle>
-              <CardDescription>Describe the role and responsibilities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe the role, responsibilities, requirements, and benefits..."
-                        className="min-h-[200px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Minimum 50 characters. Include key responsibilities and requirements.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Skills */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Required Skills</CardTitle>
-              <CardDescription>Add skills and technologies required for this role</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="e.g. React, TypeScript, Node.js"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
-                />
-                <Button type="button" onClick={addSkill} variant="secondary">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {skills.map((skill) => (
-                  <Badge key={skill} variant="secondary" className="gap-1">
-                    {skill}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => removeSkill(skill)}
-                    />
-                  </Badge>
-                ))}
-              </div>
-              {form.formState.errors.skills && (
-                <p className="text-sm text-destructive">{form.formState.errors.skills.message}</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Interview Configuration */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Interview Configuration</CardTitle>
-              <CardDescription>Choose between custom questions or AI-generated interviews</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FormField
-                control={form.control}
-                name="interviewType"
-                render={({ field }) => (
-                  <FormItem>
-                    <Tabs value={field.value} onValueChange={field.onChange}>
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="custom">Custom Questions</TabsTrigger>
-                        <TabsTrigger value="ai-generated">
-                          <Sparkles className="mr-2 h-4 w-4" />
-                          AI-Generated
-                        </TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="custom" className="space-y-4 mt-4">
-                        <div className="space-y-2">
-                          {customQuestions.map((q) => (
-                            <div key={q.id} className="flex gap-2">
-                              <Input
-                                placeholder="Enter your question..."
-                                value={q.question}
-                                onChange={(e) => {
-                                  setCustomQuestions(customQuestions.map(question =>
-                                    question.id === q.id ? { ...question, question: e.target.value } : question
-                                  ));
-                                }}
-                              />
-                              <Select
-                                value={q.type}
-                                onValueChange={(value) => {
-                                  setCustomQuestions(customQuestions.map(question =>
-                                    question.id === q.id ? { ...question, type: value } : question
-                                  ));
-                                }}
-                              >
-                                <SelectTrigger className="w-[180px]">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="open-text">Open Text</SelectItem>
-                                  <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
-                                  <SelectItem value="coding">Coding</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeCustomQuestion(q.id)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                        <Button type="button" variant="outline" onClick={addCustomQuestion}>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Add Question
-                        </Button>
-                      </TabsContent>
-
-                      <TabsContent value="ai-generated" className="space-y-4 mt-4">
-                        <div className="space-y-4">
-                          <div>
-                            <Label>Interview Template</Label>
-                            <Select value={aiConfig.template} onValueChange={(value) => setAiConfig({ ...aiConfig, template: value })}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="technical">Technical Assessment</SelectItem>
-                                <SelectItem value="behavioral">Behavioral Interview</SelectItem>
-                                <SelectItem value="role-specific">Role-Specific</SelectItem>
-                                <SelectItem value="leadership">Leadership Assessment</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div>
-                            <Label>Difficulty Level</Label>
-                            <Select value={aiConfig.difficulty} onValueChange={(value) => setAiConfig({ ...aiConfig, difficulty: value })}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="entry">Entry Level</SelectItem>
-                                <SelectItem value="medium">Intermediate</SelectItem>
-                                <SelectItem value="senior">Senior Level</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div>
-                            <Label>Number of Questions</Label>
-                            <Select value={aiConfig.questionCount.toString()} onValueChange={(value) => setAiConfig({ ...aiConfig, questionCount: parseInt(value) })}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="3">3 Questions</SelectItem>
-                                <SelectItem value="5">5 Questions</SelectItem>
-                                <SelectItem value="7">7 Questions</SelectItem>
-                                <SelectItem value="10">10 Questions</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="bg-muted p-4 rounded-lg">
-                            <p className="text-sm text-muted-foreground">
-                              <Sparkles className="inline h-4 w-4 mr-1" />
-                              AI will generate {aiConfig.questionCount} {aiConfig.difficulty} level {aiConfig.template} questions based on your job description and required skills.
-                            </p>
-                          </div>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={saveDraft}>
-              Save as Draft
-            </Button>
-            <Button type="submit">Publish Job</Button>
+          <div className="min-h-[400px]">
+            {renderStepContent()}
           </div>
+
+          {/* Navigation Actions */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={saveDraft}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Draft
+                  </Button>
+                </div>
+                
+                <div className="flex gap-2">
+                  {currentStep > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handlePrevious}
+                    >
+                      <ChevronLeft className="mr-2 h-4 w-4" />
+                      Previous
+                    </Button>
+                  )}
+                  
+                  {currentStep < steps.length - 1 ? (
+                    <Button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={!canProceedToNext()}
+                    >
+                      Next
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      disabled={!canProceedToNext()}
+                    >
+                      Publish Job
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </form>
       </Form>
     </div>

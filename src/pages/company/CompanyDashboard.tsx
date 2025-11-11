@@ -1,9 +1,19 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Briefcase, Users, TrendingUp, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Briefcase, Users, TrendingUp, Clock, CheckCircle, XCircle, FileText } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
-// Mock data for analytics
+// Mock data (kept internal to avoid clutter). Replace with API later.
+const mockJobs = [
+  { id: "1", title: "React Developer", status: "active", createdAt: "2025-01-11" },
+  { id: "2", title: "React Assessment", status: "active", createdAt: "2025-01-11" },
+  { id: "3", title: "Flutter Developer", status: "active", createdAt: "2025-01-11" },
+  { id: "4", title: "Data Scientist", status: "closed", createdAt: "2025-01-05" },
+];
+
 const applicationsData = [
   { date: "Jan", applications: 45, interviews: 23, offers: 8 },
   { date: "Feb", applications: 52, interviews: 28, offers: 12 },
@@ -22,67 +32,163 @@ const conversionData = [
 ];
 
 export default function CompanyDashboard() {
-  const [dateRange, setDateRange] = useState("30d");
+  const [dateRange] = useState("30d");
 
-  const stats = [
-    {
-      title: "Active Jobs",
-      value: "12",
-      change: "+2 this month",
-      icon: Briefcase,
-      color: "text-blue-600",
-    },
-    {
-      title: "Total Applications",
-      value: "414",
-      change: "+23% from last month",
-      icon: Users,
-      color: "text-green-600",
-    },
-    {
-      title: "Interview Scheduled",
-      value: "223",
-      change: "54% conversion",
-      icon: Clock,
-      color: "text-purple-600",
-    },
-    {
-      title: "Offers Extended",
-      value: "100",
-      change: "82 accepted",
-      icon: CheckCircle,
-      color: "text-emerald-600",
-    },
+  // Derived metrics similar to the reference UI
+  const jobMetrics = {
+    active: mockJobs.filter(j => j.status === "active").length,
+    total: mockJobs.length,
+    closed: mockJobs.filter(j => j.status === "closed").length,
+  };
+
+  const mcqMetrics = { active: 4, total: 5, closed: 1 }; // placeholder
+  const interviewMetrics = { active: 4, total: 5, closed: 1 }; // placeholder
+
+  const recentActivities = [
+    { title: "React Developer", detail: "Experience: 0-2 years • Hybrid", type: "Job post", date: "11 Jan 2023" },
+    { title: "React Assessment", detail: "No.of questions: 30 • cut off: 60%", type: "MCQ test", date: "11 Jan 2023" },
+    { title: "Flutter Developer", detail: "Experience: 0-2 years • Hybrid", type: "Job post", date: "11 Jan 2023" },
+    { title: "Interview name", detail: "Type: AI based interview • Level: Medium", type: "Interview", date: "11 Jan 2023" },
   ];
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Company Dashboard</h1>
-        <p className="text-muted-foreground">
-          Track your recruitment performance and manage your hiring pipeline
-        </p>
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden rounded-xl p-6 md:p-8"
+           style={{
+             background: "linear-gradient(90deg, #ff7a00 0%, #ffb347 100%)",
+           }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-white">Streamline Your Hiring Process</h2>
+            <p className="text-white/90 mt-2 max-w-xl text-sm md:text-base">
+              Create job posts, conduct interviews, and hire top talent directly from your portal.
+            </p>
+          </div>
+          <div className="flex md:justify-end items-start md:items-center">
+            <Link to="/company/jobs/new">
+              <Button className="bg-white text-orange-600 hover:bg-white/90">
+                Create new
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.change}</p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Metric Cards (3-up) */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Job posts */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium">Job posts</CardTitle>
+              <Briefcase className="h-4 w-4 text-orange-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between text-sm">
+              <Link to="/company/jobs" className="text-primary hover:underline">Active jobs</Link>
+              <span className="text-2xl font-bold">{jobMetrics.active}</span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span>Total jobs</span>
+                <span>{jobMetrics.total}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Closed jobs</span>
+                <span>{jobMetrics.closed}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* MCQ test */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium">MCQ test</CardTitle>
+              <FileText className="h-4 w-4 text-green-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-primary">Active Tests</span>
+              <span className="text-2xl font-bold">{mcqMetrics.active}</span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span>Total tests</span>
+                <span>{mcqMetrics.total}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Closed tests</span>
+                <span>{mcqMetrics.closed}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Interviews */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium">Interviews</CardTitle>
+              <Clock className="h-4 w-4 text-purple-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-primary">Active interviews</span>
+              <span className="text-2xl font-bold">{interviewMetrics.active}</span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span>Total interviews</span>
+                <span>{interviewMetrics.total}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Closed interviews</span>
+                <span>{interviewMetrics.closed}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Charts Row */}
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent activity</CardTitle>
+          <CardDescription>Latest actions across your workspace</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border">
+            <div className="grid grid-cols-12 px-4 py-3 text-xs font-medium text-muted-foreground border-b">
+              <div className="col-span-6">activity info</div>
+              <div className="col-span-3">Activity type</div>
+              <div className="col-span-3 text-right">created on</div>
+            </div>
+            <div className="divide-y">
+              {recentActivities.map((item, idx) => (
+                <div key={idx} className="grid grid-cols-12 items-center px-4 py-4">
+                  <div className="col-span-6">
+                    <p className="font-medium">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{item.detail}</p>
+                  </div>
+                  <div className="col-span-3">
+                    <Badge variant="secondary" className="text-xs">{item.type}</Badge>
+                  </div>
+                  <div className="col-span-3 text-right text-xs text-muted-foreground">{item.date}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Keep charts available below for extended insights */}
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Applications Over Time */}
         <Card>
           <CardHeader>
             <CardTitle>Applications Over Time</CardTitle>
@@ -104,7 +210,6 @@ export default function CompanyDashboard() {
           </CardContent>
         </Card>
 
-        {/* Conversion Funnel */}
         <Card>
           <CardHeader>
             <CardTitle>Conversion Funnel</CardTitle>
@@ -123,46 +228,6 @@ export default function CompanyDashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest actions across your job postings</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {[
-              { action: "New application", job: "Senior Frontend Engineer", candidate: "Sarah Johnson", time: "5 minutes ago", type: "new" },
-              { action: "Interview completed", job: "Backend Developer", candidate: "Michael Chen", time: "1 hour ago", type: "interview" },
-              { action: "Offer accepted", job: "Product Designer", candidate: "Emily Davis", time: "3 hours ago", type: "accepted" },
-              { action: "Application rejected", job: "DevOps Engineer", candidate: "James Wilson", time: "5 hours ago", type: "rejected" },
-              { action: "Job published", job: "Data Scientist", candidate: null, time: "1 day ago", type: "published" },
-            ].map((activity, idx) => (
-              <div key={idx} className="flex items-center gap-4 pb-4 last:pb-0 border-b last:border-0">
-                <div className={`p-2 rounded-full ${
-                  activity.type === "new" ? "bg-blue-100 text-blue-600" :
-                  activity.type === "interview" ? "bg-purple-100 text-purple-600" :
-                  activity.type === "accepted" ? "bg-green-100 text-green-600" :
-                  activity.type === "rejected" ? "bg-red-100 text-red-600" :
-                  "bg-gray-100 text-gray-600"
-                }`}>
-                  {activity.type === "accepted" ? <CheckCircle className="h-4 w-4" /> :
-                   activity.type === "rejected" ? <XCircle className="h-4 w-4" /> :
-                   <TrendingUp className="h-4 w-4" />}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{activity.action}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {activity.job} {activity.candidate && `• ${activity.candidate}`}
-                  </p>
-                </div>
-                <span className="text-xs text-muted-foreground">{activity.time}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

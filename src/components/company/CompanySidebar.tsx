@@ -1,30 +1,15 @@
-import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Briefcase, 
-  FileText, 
-  Video, 
-  FolderKanban,
-  BarChart3,
-  Settings,
-  LogOut,
-  ChevronRight,
-  Menu
-} from "lucide-react";
+import { Building2, Briefcase, PlusCircle, LogOut, ChevronRight, Menu } from "lucide-react";
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
-const candidateNavItems = [
-  { title: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { title: "Job Listing", icon: Briefcase, path: "/jobs" },
-  { title: "Resume Builder", icon: FileText, path: "/resume" },
-  { title: "Mock Interviews", icon: Video, path: "/interviews" },
-  { title: "Profile", icon: FolderKanban, path: "/portfolio" },
-  { title: "Report Analysis", icon: BarChart3, path: "/reports" },
-  { title: "Settings", icon: Settings, path: "/settings" },
+const companyNavItems = [
+  { title: "Company Dashboard", icon: Building2, path: "/company" },
+  { title: "Manage Jobs", icon: Briefcase, path: "/company/jobs" },
+  { title: "Post New Job", icon: PlusCircle, path: "/company/jobs/new" },
 ];
 
 const SidebarContent = ({ isExpanded, onNavigate }: { isExpanded: boolean; onNavigate?: () => void }) => (
@@ -45,13 +30,12 @@ const SidebarContent = ({ isExpanded, onNavigate }: { isExpanded: boolean; onNav
 
     {/* Navigation */}
     <nav className="flex flex-col gap-2 p-4 mt-4 relative">
-      {/* Candidate Section */}
       {isExpanded && (
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-4">
-          Candidate
+          Company
         </div>
       )}
-      {candidateNavItems.map((item) => (
+      {companyNavItems.map((item) => (
         <NavLink
           key={item.path}
           to={item.path}
@@ -67,7 +51,6 @@ const SidebarContent = ({ isExpanded, onNavigate }: { isExpanded: boolean; onNav
         >
           {({ isActive }) => (
             <>
-              {/* Curved Outside Bubble for Active Tab */}
               {isActive && (
                 <>
                   <span className="absolute -right-5 top-0 h-full w-5 bg-background rounded-l-full shadow-sm" />
@@ -92,34 +75,18 @@ const SidebarContent = ({ isExpanded, onNavigate }: { isExpanded: boolean; onNav
         </NavLink>
       ))}
 
-      {/* Company links removed from candidate sidebar to enforce separation */}
-
       {/* Logout Button */}
       <button className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-foreground hover:bg-destructive/10 hover:text-destructive hover:scale-105 hover:shadow-sm mt-8 transform">
         <LogOut className="w-5 h-5 flex-shrink-0" />
         {isExpanded && (
-          <span className="text-sm font-medium whitespace-nowrap">
-            Logout
-          </span>
+          <span className="text-sm font-medium whitespace-nowrap">Logout</span>
         )}
       </button>
     </nav>
-
-      {/* Collapse Indicator */}
-      {!onNavigate && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <ChevronRight 
-            className={cn(
-              "w-5 h-5 text-muted-foreground transition-smooth",
-              isExpanded && "rotate-180"
-            )} 
-          />
-        </div>
-      )}
   </>
 );
 
-export const Sidebar = () => {
+export const CompanySidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -151,6 +118,16 @@ export const Sidebar = () => {
         onMouseLeave={() => setIsExpanded(false)}
       >
         <SidebarContent isExpanded={isExpanded} />
+
+        {/* Collapse Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+          <ChevronRight 
+            className={cn(
+              "w-5 h-5 text-muted-foreground transition-smooth",
+              isExpanded && "rotate-180"
+            )} 
+          />
+        </div>
       </aside>
     </>
   );

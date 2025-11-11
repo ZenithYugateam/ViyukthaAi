@@ -19,6 +19,7 @@ import CompanyDashboard from "./pages/company/CompanyDashboard";
 import CompanyJobs from "./pages/company/CompanyJobs";
 import CreateJob from "./pages/company/CreateJob";
 import JobApplicants from "./pages/company/JobApplicants";
+import { CompanyLayout } from "./components/company/CompanyLayout";
 
 const queryClient = new QueryClient();
 
@@ -44,12 +45,12 @@ const App = () => (
           <Route path="/reports" element={<Layout><Reports /></Layout>} />
           <Route path="/settings" element={<Layout><Settings /></Layout>} />
           
-          {/* Company Routes with Layout */}
-          <Route path="/company" element={<Layout><CompanyDashboard /></Layout>} />
-          <Route path="/company/jobs" element={<Layout><CompanyJobs /></Layout>} />
-          <Route path="/company/jobs/new" element={<Layout><CreateJob /></Layout>} />
-          <Route path="/company/jobs/:jobId/edit" element={<Layout><CreateJob /></Layout>} />
-          <Route path="/company/jobs/:jobId/applicants" element={<Layout><JobApplicants /></Layout>} />
+          {/* Company Routes with CompanyLayout */}
+          <Route path="/company" element={<CompanyLayout><CompanyDashboard /></CompanyLayout>} />
+          <Route path="/company/jobs" element={<CompanyLayout><CompanyJobs /></CompanyLayout>} />
+          <Route path="/company/jobs/new" element={<CompanyLayout><CreateJob /></CompanyLayout>} />
+          <Route path="/company/jobs/:jobId/edit" element={<CompanyLayout><CreateJob /></CompanyLayout>} />
+          <Route path="/company/jobs/:jobId/applicants" element={<CompanyLayout><JobApplicants /></CompanyLayout>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
