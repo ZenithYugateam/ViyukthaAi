@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Menu,
   Building2,
-  Users,
   PlusCircle
 } from "lucide-react";
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -36,157 +35,182 @@ const companyNavItems = [
   { title: "Post New Job", icon: PlusCircle, path: "/company/jobs/new" },
 ];
 
-const SidebarContent = ({ isExpanded, onNavigate }: { isExpanded: boolean; onNavigate?: () => void }) => (
-  <>
-    {/* Logo */}
-    <div className="flex items-center justify-center h-16 border-b border-border px-4">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <SmartToyIcon sx={{ fontSize: 28, color: '#3A8DFF' }} />
+const SidebarContent = ({
+  isExpanded,
+  onNavigate,
+  isRecruiter
+}: {
+  isExpanded: boolean;
+  onNavigate?: () => void;
+  isRecruiter: boolean;
+}) => {
+  return (
+    <>
+      {/* Logo */}
+      <div className="flex items-center justify-center h-16 border-b border-border px-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <SmartToyIcon sx={{ fontSize: 28, color: '#3A8DFF' }} />
+          </div>
+          {isExpanded && (
+            <span className="font-semibold text-lg whitespace-nowrap text-foreground">
+              Viyuktha AI
+            </span>
+          )}
         </div>
-        {isExpanded && (
-          <span className="font-semibold text-lg whitespace-nowrap text-foreground">
-            Viyuktha AI
-          </span>
-        )}
       </div>
-    </div>
 
-    {/* Navigation */}
-    <nav className="flex flex-col gap-2 p-4 mt-4 relative">
-      {/* Candidate Section */}
-      {isExpanded && (
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-4">
-          Candidate
-        </div>
-      )}
-      {candidateNavItems.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative group transform overflow-hidden",
-              isActive
-                ? "gradient-primary text-primary-foreground shadow-md scale-105"
-                : "text-foreground hover:bg-primary/10 hover:scale-105 hover:shadow-sm"
-            )
-          }
-        >
-          {({ isActive }) => (
-            <>
-              {/* Curved Outside Bubble for Active Tab */}
-              {isActive && (
-                <>
-                  <span className="absolute -right-5 top-0 h-full w-5 bg-background rounded-l-full shadow-sm" />
-                  <span className="absolute -left-5 top-0 h-full w-5 bg-background rounded-r-full shadow-sm" />
-                </>
-              )}
-
-              <item.icon className="w-5 h-5 flex-shrink-0 z-10" />
-              {isExpanded && (
-                <span className="text-sm font-medium whitespace-nowrap z-10">
-                  {item.title}
-                </span>
-              )}
-              {!isExpanded && (
-                <div className="absolute left-full ml-6 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg border border-border">
-                  {item.title}
-                  <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-4 border-transparent border-r-popover" />
-                </div>
-              )}
-            </>
-          )}
-        </NavLink>
-      ))}
-
-      {/* Company Section */}
-      {isExpanded && (
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 px-4 border-t border-border pt-4">
-          Company
-        </div>
-      )}
-      {!isExpanded && (
-        <div className="border-t border-border my-4" />
-      )}
-      {companyNavItems.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative group transform overflow-hidden",
-              isActive
-                ? "gradient-primary text-primary-foreground shadow-md scale-105"
-                : "text-foreground hover:bg-primary/10 hover:scale-105 hover:shadow-sm"
-            )
-          }
-        >
-          {({ isActive }) => (
-            <>
-              {/* Curved Outside Bubble for Active Tab */}
-              {isActive && (
-                <>
-                  <span className="absolute -right-5 top-0 h-full w-5 bg-background rounded-l-full shadow-sm" />
-                  <span className="absolute -left-5 top-0 h-full w-5 bg-background rounded-r-full shadow-sm" />
-                </>
-              )}
-
-              <item.icon className="w-5 h-5 flex-shrink-0 z-10" />
-              {isExpanded && (
-                <span className="text-sm font-medium whitespace-nowrap z-10">
-                  {item.title}
-                </span>
-              )}
-              {!isExpanded && (
-                <div className="absolute left-full ml-6 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg border border-border">
-                  {item.title}
-                  <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-4 border-transparent border-r-popover" />
-                </div>
-              )}
-            </>
-          )}
-        </NavLink>
-      ))}
-
-      {/* Logout Button */}
-      <button className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-foreground hover:bg-destructive/10 hover:text-destructive hover:scale-105 hover:shadow-sm mt-8 transform">
-        <LogOut className="w-5 h-5 flex-shrink-0" />
+      {/* Navigation */}
+      <nav className="flex flex-col gap-2 p-4 mt-4 relative">
+        {/* Candidate Section */}
         {isExpanded && (
-          <span className="text-sm font-medium whitespace-nowrap">
-            Logout
-          </span>
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-4">
+            Candidate
+          </div>
         )}
-      </button>
-    </nav>
+        {candidateNavItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            onClick={onNavigate}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative group transform overflow-hidden",
+                isActive
+                  ? "gradient-primary text-primary-foreground shadow-md scale-105"
+                  : "text-foreground hover:bg-primary/10 hover:scale-105 hover:shadow-sm"
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                {/* Curved Outside Bubble for Active Tab */}
+                {isActive && (
+                  <>
+                    <span className="absolute -right-5 top-0 h-full w-5 bg-background rounded-l-full shadow-sm" />
+                    <span className="absolute -left-5 top-0 h-full w-5 bg-background rounded-r-full shadow-sm" />
+                  </>
+                )}
+
+                <item.icon className="w-5 h-5 flex-shrink-0 z-10" />
+                {isExpanded && (
+                  <span className="text-sm font-medium whitespace-nowrap z-10">
+                    {item.title}
+                  </span>
+                )}
+                {!isExpanded && (
+                  <div className="absolute left-full ml-6 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg border border-border">
+                    {item.title}
+                    <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-4 border-transparent border-r-popover" />
+                  </div>
+                )}
+              </>
+            )}
+          </NavLink>
+        ))}
+
+        {/* Company Section - only for recruiter */}
+        {isRecruiter && (
+          <>
+            {isExpanded && (
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 px-4 border-t border-border pt-4">
+                Company
+              </div>
+            )}
+            {!isExpanded && (
+              <div className="border-t border-border my-4" />
+            )}
+            {companyNavItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative group transform overflow-hidden",
+                    isActive
+                      ? "gradient-primary text-primary-foreground shadow-md scale-105"
+                      : "text-foreground hover:bg-primary/10 hover:scale-105 hover:shadow-sm"
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                  {/* Curved Outside Bubble for Active Tab */}
+                    {isActive && (
+                      <>
+                        <span className="absolute -right-5 top-0 h-full w-5 bg-background rounded-l-full shadow-sm" />
+                        <span className="absolute -left-5 top-0 h-full w-5 bg-background rounded-r-full shadow-sm" />
+                      </>
+                    )}
+                    
+                    <item.icon className="w-5 h-5 flex-shrink-0 z-10" />
+                    {isExpanded && (
+                      <span className="text-sm font-medium whitespace-nowrap z-10">
+                        {item.title}
+                      </span>
+                    )}
+                    {!isExpanded && (
+                      <div className="absolute left-full ml-6 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg border border-border">
+                        {item.title}
+                        <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-4 border-transparent border-r-popover" />
+                      </div>
+                    )}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </>
+        )}
+
+        {/* Logout Button */}
+        <button className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-foreground hover:bg-destructive/10 hover:text-destructive hover:scale-105 hover:shadow-sm mt-8 transform">
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          {isExpanded && (
+            <span className="text-sm font-medium whitespace-nowrap">
+              Logout
+            </span>
+          )}
+        </button>
+      </nav>
 
       {/* Collapse Indicator */}
       {!onNavigate && (
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <ChevronRight 
+          <ChevronRight
             className={cn(
               "w-5 h-5 text-muted-foreground transition-smooth",
               isExpanded && "rotate-180"
-            )} 
+            )}
           />
         </div>
       )}
-  </>
-);
+    </>
+  );
+};
 
 export const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [recruiter, setRecruiter] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("user","user"); // use user login credentials to findout the user role 
+    const role = localStorage.getItem("user");
+    if (role === "recruiter") {
+      setRecruiter(true);
+    } else {
+      setRecruiter(false);
+    }
+  }, []);
 
   return (
     <>
       {/* Mobile Menu Button */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger asChild>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             className="fixed top-4 left-4 z-50 md:hidden bg-background shadow-md hover:bg-accent"
           >
@@ -194,7 +218,11 @@ export const Sidebar = () => {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-64">
-          <SidebarContent isExpanded={true} onNavigate={() => setMobileOpen(false)} />
+          <SidebarContent
+            isExpanded={true}
+            isRecruiter={recruiter}
+            onNavigate={() => setMobileOpen(false)}
+          />
         </SheetContent>
       </Sheet>
 
@@ -207,7 +235,7 @@ export const Sidebar = () => {
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
       >
-        <SidebarContent isExpanded={isExpanded} />
+        <SidebarContent isExpanded={isExpanded} isRecruiter={recruiter} />
       </aside>
     </>
   );
