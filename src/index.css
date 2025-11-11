@@ -8,6 +8,13 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Company Dashboard Color Variables */
+    --primary-color: #1E88E5;
+    --accent-color: #F9A826;
+    --background-color: #F5F7FA;
+    --dark-bg-color: #121212;
+    --text-color: #1A1A1A;
+
     --background: 0 0% 100%;
     --foreground: 0 0% 6%;
 
