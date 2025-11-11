@@ -22,16 +22,50 @@ export const useVoiceRecognition = ({ onResult, continuous = false, onError, onR
         recognitionRef.current.continuous = continuous;
         recognitionRef.current.interimResults = true;
         recognitionRef.current.lang = 'en-US';
+        // Increase maxAlternatives to get better results
+        recognitionRef.current.maxAlternatives = 1;
 
         recognitionRef.current.onresult = (event: any) => {
-          const lastResult = event.results[event.results.length - 1];
-          const transcript = lastResult[0].transcript;
-          const isFinal = lastResult.isFinal;
-          
-          console.log('Voice recognition result:', transcript, 'isFinal:', isFinal);
-          
-          // Send both interim and final results
-          onResult(transcript, isFinal);
+          try {
+            if (!event.results || event.results.length === 0) {
+              return;
+            }
+            
+            // Get ALL results, not just the last one, to capture full speech
+            let fullTranscript = '';
+            let hasFinal = false;
+            
+            // Accumulate all results
+            for (let i = 0; i < event.results.length; i++) {
+              const result = event.results[i];
+              if (result && result[0] && result[0].transcript) {
+                fullTranscript += (fullTranscript ? ' ' : '') + result[0].transcript;
+                if (result.isFinal) {
+                  hasFinal = true;
+                }
+              }
+            }
+            
+            // Get the last result for interim/final status
+            const lastResult = event.results[event.results.length - 1];
+            if (!lastResult || !lastResult[0]) {
+              return;
+            }
+            
+            const isFinal = lastResult.isFinal || hasFinal;
+            
+            // Use full accumulated transcript, not just last result
+            const transcript = fullTranscript.trim();
+            
+            // Only process if we have a valid transcript
+            if (transcript && transcript.length > 0) {
+              console.log('Voice recognition result (full):', transcript, 'isFinal:', isFinal, 'results count:', event.results.length);
+              // Send both interim and final results with full transcript
+              onResult(transcript, isFinal);
+            }
+          } catch (error) {
+            console.error('Error processing voice recognition result:', error);
+          }
         };
 
         recognitionRef.current.onerror = (event: any) => {
@@ -131,18 +165,37 @@ export const useVoiceRecognition = ({ onResult, continuous = false, onError, onR
     
     try {
       shouldBeListeningRef.current = true;
-      recognitionRef.current.start();
-      setIsListening(true);
-      console.log('✓ Started listening for speech');
-    } catch (error: any) {
-      // If already started, that's ok
-      if (error.message?.includes('already started')) {
-        console.log('Recognition already started');
-        setIsListening(true);
-        shouldBeListeningRef.current = true;
-      } else {
-        console.error('Error starting recognition:', error);
+      
+      // Reset recognition state if needed
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        // Ignore if not running
       }
+      
+      // Small delay to ensure clean start
+      setTimeout(() => {
+        if (shouldBeListeningRef.current && recognitionRef.current) {
+          try {
+            recognitionRef.current.start();
+            setIsListening(true);
+            console.log('✓ Started listening for speech');
+          } catch (startError: any) {
+            // If already started, that's ok
+            if (startError.message?.includes('already started') || startError.name === 'InvalidStateError') {
+              console.log('Recognition already started');
+              setIsListening(true);
+              shouldBeListeningRef.current = true;
+            } else {
+              console.error('Error starting recognition:', startError);
+              shouldBeListeningRef.current = false;
+            }
+          }
+        }
+      }, 50);
+    } catch (error: any) {
+      console.error('Error in startListening:', error);
+      shouldBeListeningRef.current = false;
     }
   };
 
