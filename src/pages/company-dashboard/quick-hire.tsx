@@ -34,6 +34,9 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
+  Crown,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,24 +45,91 @@ const QuickHirePage: React.FC = () => {
   const [filteredCandidates, setFilteredCandidates] = React.useState(mockCandidates);
   const [selectedCandidate, setSelectedCandidate] = React.useState<Candidate | null>(null);
   
-  // Filter states
   const [selectedExperience, setSelectedExperience] = React.useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = React.useState<string[]>([]);
   const [selectedSkills, setSelectedSkills] = React.useState<string[]>([]);
   const [selectedAvailability, setSelectedAvailability] = React.useState<string[]>([]);
   const [showFilters, setShowFilters] = React.useState(false);
-  
-  // Extract unique values for filters
+
   const experienceOptions = ["0-2 years", "3-5 years", "5+ years"];
   const locationOptions = Array.from(new Set(mockCandidates.map(c => c.location)));
   const topSkills = Array.from(new Set(mockCandidates.flatMap(c => c.primarySkills))).slice(0, 10);
   const availabilityOptions: Candidate["availability"][] = ["Immediate", "2 Weeks", "1 Month", "Negotiable"];
 
-  // Apply all filters
+  const generateUniqueAvatarUrl = (candidate: Candidate, index: number) => {
+    const professionalAvatars = [
+      "1472099645785-5658abf4ff4e",
+      "1507003211169-0a1dd7228f2d",
+      "1519345182560-3f2917c472ef",
+      "1500648767791-00dcc994a43e",
+      "1531427186611-ecfd6d936c79",
+      "1560250097-0b93528c311a",
+      "1544725176-7c40e5a71c5e",
+      "1570295999919-56ceb5ecca61",
+      "1580489944761-15a19d654956",
+      "1590080874088-8dc0c3d63d1a",
+      "1494790108755-2616b192b099",
+      "1535713875002-d1d0cf377fde",
+      "1517841905240-472988babdf9",
+      "1544005313-94ddf0286df2",
+      "1554151228-14d9def656e4",
+      "1567532939604-b6b5b0db2604",
+      "1573496359142-b8d757343da7",
+      "1580489944761-15a19d654956",
+      "1590080874088-8d0c3d63d1a",
+      "1544005313-94ddf0286df2",
+      "1519345182560-3f2917c472ef",
+      "1500648767791-00dcc994a43e",
+      "1531427186611-ecfd6d936c79",
+      "1560250097-0b93528c311a",
+      "1544725176-7c40e5a71c5e",
+      "1570295999919-56ceb5ecca61",
+      "1580489944761-15a19d654956",
+      "1590080874088-8d0c3d63d1a",
+      "1544005313-94ddf0286df2",
+      "1554151228-14d9def656e4",
+      "1567532939604-b6b5b0db2604",
+      "1573496359142-b8d757343da7",
+      "1472099645785-5658abf4ff4e",
+      "1507003211169-0a1dd7228f2d",
+      "1519345182560-3f2917c472ef",
+      "1500648767791-00dcc994a43e",
+      "1531427186611-ecfd6d936c79",
+      "1560250097-0b93528c311a",
+      "1544725176-7c40e5a71c5e",
+      "1570295999919-56ceb5ecca61",
+    ];
+    
+    const uniqueSeed = candidate.id.charCodeAt(0) + index;
+    const avatarIndex = uniqueSeed % professionalAvatars.length;
+    
+    return `https://images.unsplash.com/photo-${professionalAvatars[avatarIndex]}?w=150&h=150&fit=crop&crop=face&auto=format`;
+  };
+
+  const getGradientByRating = (rating: number) => {
+    if (rating >= 4.5) return "bg-gradient-to-br from-purple-500 via-pink-500 to-red-500";
+    if (rating >= 4.0) return "bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500";
+    if (rating >= 3.5) return "bg-gradient-to-br from-green-500 via-emerald-500 to-lime-500";
+    return "bg-gradient-to-br from-gray-500 via-slate-600 to-stone-600";
+  };
+
+  const getStatusIcon = (rating: number, isVerified: boolean) => {
+    if (rating >= 4.5) return <Crown className="h-3 w-3 text-yellow-400" />;
+    if (rating >= 4.0) return <Sparkles className="h-3 w-3 text-blue-400" />;
+    if (isVerified) return <CheckCircle2 className="h-3 w-3 text-green-400" />;
+    return <Zap className="h-3 w-3 text-amber-400" />;
+  };
+
+  const getStatusBadgeColor = (rating: number, isVerified: boolean) => {
+    if (rating >= 4.5) return "bg-yellow-500";
+    if (rating >= 4.0) return "bg-blue-500";
+    if (isVerified) return "bg-green-500";
+    return "bg-amber-500";
+  };
+
   const applyFilters = React.useCallback(() => {
     let filtered = mockCandidates;
 
-    // Search query filter
     if (searchQuery.trim()) {
       const lowerQuery = searchQuery.toLowerCase();
       const keywords = lowerQuery.split(" ").filter(Boolean);
@@ -83,7 +153,6 @@ const QuickHirePage: React.FC = () => {
       });
     }
 
-    // Experience filter
     if (selectedExperience.length > 0) {
       filtered = filtered.filter((candidate) => {
         const years = candidate.totalExperience;
@@ -96,14 +165,12 @@ const QuickHirePage: React.FC = () => {
       });
     }
 
-    // Location filter
     if (selectedLocations.length > 0) {
       filtered = filtered.filter((candidate) =>
         selectedLocations.includes(candidate.location)
       );
     }
 
-    // Skills filter
     if (selectedSkills.length > 0) {
       filtered = filtered.filter((candidate) =>
         selectedSkills.some(skill =>
@@ -112,7 +179,6 @@ const QuickHirePage: React.FC = () => {
       );
     }
 
-    // Availability filter
     if (selectedAvailability.length > 0) {
       filtered = filtered.filter((candidate) =>
         selectedAvailability.includes(candidate.availability)
@@ -122,12 +188,10 @@ const QuickHirePage: React.FC = () => {
     setFilteredCandidates(filtered);
   }, [searchQuery, selectedExperience, selectedLocations, selectedSkills, selectedAvailability]);
 
-  // Intelligent search function
   const handleSearch = React.useCallback((query: string) => {
     setSearchQuery(query);
   }, []);
   
-  // Apply filters whenever any filter changes
   React.useEffect(() => {
     applyFilters();
   }, [applyFilters]);
@@ -178,7 +242,6 @@ const QuickHirePage: React.FC = () => {
         <div className="flex-1 flex flex-col">
           <TopNav />
           <main className="p-4 md:p-6 space-y-6">
-            {/* Hero Section with Search */}
             <div className="text-center space-y-4 py-8">
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -191,7 +254,6 @@ const QuickHirePage: React.FC = () => {
                 </p>
               </motion.div>
 
-              {/* Centered Search Bar */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -213,7 +275,6 @@ const QuickHirePage: React.FC = () => {
                 </p>
               </motion.div>
 
-              {/* Filter Toggle & Results Count */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -239,7 +300,6 @@ const QuickHirePage: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Filters Panel */}
             <AnimatePresence>
               {showFilters && (
                 <motion.div
@@ -261,7 +321,6 @@ const QuickHirePage: React.FC = () => {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {/* Experience Filter */}
                         <div>
                           <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                             <Briefcase className="h-4 w-4" />
@@ -286,7 +345,6 @@ const QuickHirePage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Location Filter */}
                         <div>
                           <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                             <MapPin className="h-4 w-4" />
@@ -311,7 +369,6 @@ const QuickHirePage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Skills Filter */}
                         <div>
                           <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                             <Code className="h-4 w-4" />
@@ -336,7 +393,6 @@ const QuickHirePage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Availability Filter */}
                         <div>
                           <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                             <Clock className="h-4 w-4" />
@@ -367,7 +423,6 @@ const QuickHirePage: React.FC = () => {
               )}
             </AnimatePresence>
 
-            {/* Candidate Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence mode="popLayout">
                 {filteredCandidates.map((candidate, index) => (
@@ -382,18 +437,37 @@ const QuickHirePage: React.FC = () => {
                     <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer h-full flex flex-col">
                       <CardHeader className="pb-3">
                         <div className="flex items-start gap-3">
-                          <div className="relative">
-                            <img
-                              src={candidate.avatar}
-                              alt={candidate.name}
-                              className="w-16 h-16 rounded-full border-2 border-primary"
-                            />
-                            {candidate.isVerified && (
-                              <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
-                                <CheckCircle2 className="h-3 w-3 text-white" />
+                          <motion.div 
+                            className="relative group"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                          >
+                            <div className="relative">
+                              <div className={`
+                                absolute inset-0 rounded-full blur-md opacity-60
+                                ${getGradientByRating(candidate.overallRating)}
+                              `} />
+                              
+                              <img
+                                src={generateUniqueAvatarUrl(candidate, index)}
+                                alt={candidate.name}
+                                className="w-16 h-16 rounded-full border-3 border-white shadow-xl relative z-10 transition-all duration-300 group-hover:shadow-2xl object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format`;
+                                }}
+                              />
+                              
+                              <div className={`
+                                absolute -bottom-1 -right-1 rounded-full p-1.5 shadow-lg border-2 border-white z-20
+                                ${getStatusBadgeColor(candidate.overallRating, candidate.isVerified)}
+                              `}>
+                                {getStatusIcon(candidate.overallRating, candidate.isVerified)}
                               </div>
-                            )}
-                          </div>
+
+                              <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30" />
+                            </div>
+                          </motion.div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-lg truncate">{candidate.name}</h3>
                             <p className="text-sm text-muted-foreground truncate">{candidate.title}</p>
@@ -406,7 +480,6 @@ const QuickHirePage: React.FC = () => {
                       </CardHeader>
 
                       <CardContent className="space-y-3 flex-1 flex flex-col">
-                        {/* Key Info */}
                         <div className="space-y-2 text-sm">
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <MapPin className="h-4 w-4 flex-shrink-0" />
@@ -422,7 +495,6 @@ const QuickHirePage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Availability Badge */}
                         <div>
                           <Badge className={getAvailabilityColor(candidate.availability)}>
                             <Clock className="h-3 w-3 mr-1" />
@@ -430,7 +502,6 @@ const QuickHirePage: React.FC = () => {
                           </Badge>
                         </div>
 
-                        {/* Primary Skills */}
                         <div className="flex-1">
                           <p className="text-xs font-medium mb-2">Top Skills:</p>
                           <div className="flex flex-wrap gap-1">
@@ -447,7 +518,6 @@ const QuickHirePage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Actions */}
                         <div className="flex gap-2 pt-2">
                           <Button
                             size="sm"
@@ -471,7 +541,6 @@ const QuickHirePage: React.FC = () => {
               </AnimatePresence>
             </div>
 
-            {/* Empty State */}
             {filteredCandidates.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -489,7 +558,6 @@ const QuickHirePage: React.FC = () => {
           </main>
         </div>
 
-        {/* Detailed Candidate Modal */}
         <AnimatePresence>
           {selectedCandidate && (
             <>
@@ -508,14 +576,45 @@ const QuickHirePage: React.FC = () => {
                 className="fixed right-0 top-0 bottom-0 w-full md:w-[700px] bg-background border-l shadow-2xl z-50 overflow-y-auto"
               >
                 <div className="p-6 space-y-6">
-                  {/* Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4">
-                      <img
-                        src={selectedCandidate.avatar}
-                        alt={selectedCandidate.name}
-                        className="w-20 h-20 rounded-full border-2 border-primary"
-                      />
+                      <motion.div 
+                        className="relative group"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+                      >
+                        <div className="relative">
+                          <div className={`
+                            absolute inset-0 rounded-full blur-xl opacity-50
+                            ${getGradientByRating(selectedCandidate.overallRating)}
+                          `} />
+                          
+                          <img
+                            src={generateUniqueAvatarUrl(selectedCandidate, mockCandidates.findIndex(c => c.id === selectedCandidate.id))}
+                            alt={selectedCandidate.name}
+                            className="w-20 h-20 rounded-full border-4 border-white shadow-2xl relative z-10 object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format`;
+                            }}
+                          />
+                          
+                          <div className={`
+                            absolute -bottom-2 -right-2 rounded-full p-2 shadow-2xl border-3 border-white z-20
+                            ${getStatusBadgeColor(selectedCandidate.overallRating, selectedCandidate.isVerified)}
+                          `}>
+                            {getStatusIcon(selectedCandidate.overallRating, selectedCandidate.isVerified)}
+                          </div>
+
+                          <motion.div
+                            className="absolute inset-0 rounded-full border-2 border-transparent border-t-white/60 border-r-white/40"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                            style={{ scale: 1.1 }}
+                          />
+                        </div>
+                      </motion.div>
                       <div>
                         <h2 className="text-2xl font-bold">{selectedCandidate.name}</h2>
                         <p className="text-lg text-muted-foreground">{selectedCandidate.title}</p>
@@ -542,7 +641,6 @@ const QuickHirePage: React.FC = () => {
                     </Button>
                   </div>
 
-                  {/* Quick Info */}
                   <div className="grid grid-cols-2 gap-4">
                     <Card>
                       <CardContent className="pt-4">
@@ -584,7 +682,6 @@ const QuickHirePage: React.FC = () => {
                     </Card>
                   </div>
 
-                  {/* Bio */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg">About</CardTitle>
@@ -594,7 +691,6 @@ const QuickHirePage: React.FC = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Skills */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -613,7 +709,6 @@ const QuickHirePage: React.FC = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Ratings */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -643,7 +738,6 @@ const QuickHirePage: React.FC = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Education */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -662,7 +756,6 @@ const QuickHirePage: React.FC = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Projects */}
                   {selectedCandidate.projects.length > 0 && (
                     <Card>
                       <CardHeader>
@@ -694,7 +787,6 @@ const QuickHirePage: React.FC = () => {
                     </Card>
                   )}
 
-                  {/* Certifications */}
                   {selectedCandidate.certifications.length > 0 && (
                     <Card>
                       <CardHeader>
@@ -716,7 +808,6 @@ const QuickHirePage: React.FC = () => {
                     </Card>
                   )}
 
-                  {/* Contact Info */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg">Contact Information</CardTitle>
@@ -751,7 +842,6 @@ const QuickHirePage: React.FC = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Action Buttons */}
                   <div className="flex gap-3 sticky bottom-0 bg-background pt-4 border-t">
                     <Button
                       className="flex-1"
