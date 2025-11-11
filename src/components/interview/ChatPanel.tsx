@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Mic, MicOff, Maximize2 } from "lucide-react";
-import { useVoiceRecognition } from "@/hooks/useVoiceRecognition";
+import { Send, Maximize2 } from "lucide-react";
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -21,32 +20,11 @@ export const ChatPanel = ({
   onSendMessage
 }: ChatPanelProps) => {
   const [message, setMessage] = useState("");
-  const {
-    isListening,
-    isSupported,
-    startListening,
-    stopListening
-  } = useVoiceRecognition({
-    onResult: transcript => {
-      setMessage(transcript);
-    },
-    continuous: false
-  });
+  
   const handleSend = () => {
     if (message.trim()) {
       onSendMessage(message);
       setMessage("");
-    }
-  };
-  const handleVoiceToggle = async () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      try {
-        await startListening();
-      } catch (error) {
-        console.error('Voice recognition error:', error);
-      }
     }
   };
   return <div className="w-full h-full border-l border-border flex flex-col">
@@ -76,22 +54,24 @@ export const ChatPanel = ({
                 handleSend();
               }
             }}
+            onPaste={(e) => {
+              e.preventDefault();
+              return false;
+            }}
+            onCopy={(e) => {
+              e.preventDefault();
+              return false;
+            }}
+            onCut={(e) => {
+              e.preventDefault();
+              return false;
+            }}
             placeholder="Type or speak your answer..."
             className="resize-none pr-24 bg-muted/50 border-border"
             rows={2}
             disabled={!isInterviewStarted || isLoading}
           />
           <div className="absolute right-2 bottom-2 flex gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              className={`h-8 w-8 rounded-full ${isListening ? 'bg-red-500 hover:bg-red-600 text-white' : ''}`}
-              onClick={handleVoiceToggle}
-              disabled={!isInterviewStarted || !isSupported}
-              title={isListening ? "Stop recording" : "Start voice input"}
-            >
-              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </Button>
             <Button
               size="icon"
               onClick={handleSend}

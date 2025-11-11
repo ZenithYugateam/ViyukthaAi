@@ -63,19 +63,18 @@ export const VideoFeed = ({ title, videoRef, isActive, isAI, aiStatus, isAISpeak
           )}
         </>
       ) : isAI ? (
-        <div className="w-full h-full flex items-center justify-center relative">
+        <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
           {isAISpeaking && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex gap-1 items-end h-16">
-                <div className="w-2 bg-primary rounded-full animate-voice-wave" style={{ animationDelay: '0s' }} />
-                <div className="w-2 bg-primary rounded-full animate-voice-wave" style={{ animationDelay: '0.1s' }} />
-                <div className="w-2 bg-primary rounded-full animate-voice-wave" style={{ animationDelay: '0.2s' }} />
-                <div className="w-2 bg-primary rounded-full animate-voice-wave" style={{ animationDelay: '0.3s' }} />
-                <div className="w-2 bg-primary rounded-full animate-voice-wave" style={{ animationDelay: '0.4s' }} />
-              </div>
-            </div>
+            <div 
+              className="absolute inset-0 animate-voice-gradient"
+              style={{
+                background: "linear-gradient(90deg, transparent 0%, hsl(212, 73%, 52%) 25%, hsl(208, 84%, 75%) 50%, hsl(212, 73%, 52%) 75%, transparent 100%)",
+                backgroundSize: "200% 100%",
+                opacity: 0.4,
+              }}
+            />
           )}
-          <div className="text-center">
+          <div className="text-center relative z-10">
             <div className={`w-32 h-32 md:w-48 md:h-48 mx-auto mb-4 md:mb-6 flex items-center justify-center transition-transform duration-300 ${isAISpeaking ? 'scale-110' : 'scale-100'}`}>
               <Lottie 
                 animationData={aiInterviewerAnimation}
