@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Mail, Phone, MapPin, Briefcase, Bell, Lock, Globe } from "lucide-react";
+import femaleAvatar from "@/assets/female-avatar.jpg";
 
 const Settings = () => {
   return (
@@ -20,9 +21,11 @@ const Settings = () => {
         <h3 className="text-xl font-semibold text-foreground mb-6">Personal Information</h3>
         
         <div className="flex items-center gap-6 mb-6">
-          <Avatar className="w-24 h-24">
-            <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" />
-            <AvatarFallback>AK</AvatarFallback>
+          <Avatar className="w-24 h-24 border-2 border-primary/20">
+            <AvatarImage src={femaleAvatar} alt="Profile" />
+            <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/20 text-primary-foreground font-semibold text-lg">
+              PS
+            </AvatarFallback>
           </Avatar>
           <div>
             <Button className="gradient-primary text-white">Change Photo</Button>

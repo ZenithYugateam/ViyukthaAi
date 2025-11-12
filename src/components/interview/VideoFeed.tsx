@@ -36,7 +36,7 @@ export const VideoFeed = ({ title, videoRef, isActive, isAI, aiStatus, isAISpeak
   return (
     <div className="relative bg-card rounded-2xl overflow-hidden border border-border h-full min-h-[200px] md:min-h-0">
       <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10">
-        <span className={`${isAI ? 'gradient-primary text-white' : 'bg-card/80'} backdrop-blur-sm px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-xs md:text-sm font-medium ${isAI ? '' : 'text-foreground'}`}>
+        <span className={`${isAI ? 'bg-foreground dark:bg-foreground text-background dark:text-background' : 'bg-card/90 dark:bg-card/90'} backdrop-blur-sm px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-xs md:text-sm font-semibold shadow-md ${isAI ? '' : 'text-foreground dark:text-foreground'}`}>
           {title}
         </span>
       </div>
@@ -68,9 +68,9 @@ export const VideoFeed = ({ title, videoRef, isActive, isAI, aiStatus, isAISpeak
             <div 
               className="absolute inset-0 animate-voice-gradient"
               style={{
-                background: "linear-gradient(90deg, transparent 0%, hsl(212, 73%, 52%) 25%, hsl(208, 84%, 75%) 50%, hsl(212, 73%, 52%) 75%, transparent 100%)",
+                background: "linear-gradient(90deg, transparent 0%, hsl(0, 0%, 20%) 25%, hsl(0, 0%, 40%) 50%, hsl(0, 0%, 20%) 75%, transparent 100%)",
                 backgroundSize: "200% 100%",
-                opacity: 0.4,
+                opacity: 0.3,
               }}
             />
           )}
@@ -83,7 +83,7 @@ export const VideoFeed = ({ title, videoRef, isActive, isAI, aiStatus, isAISpeak
                 style={{ width: '100%', height: '100%' }}
               />
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-foreground dark:text-foreground font-medium">
               {aiStatus || "AI Interviewer Ready"}
             </p>
           </div>

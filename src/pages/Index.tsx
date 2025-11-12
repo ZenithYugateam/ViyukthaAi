@@ -4,6 +4,7 @@ import { JobRecommendations } from "@/components/dashboard/JobRecommendations";
 import { UpcomingInterviews } from "@/components/dashboard/UpcomingInterviews";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { AchievementsBadges } from "@/components/dashboard/AchievementsBadges";
+import { TalentPoolCard } from "@/components/dashboard/TalentPoolCard";
 import { AnimatedSearchBar } from "@/components/AnimatedSearchBar";
 import { Briefcase, TrendingUp, FileCheck, Target } from "lucide-react";
 
@@ -50,6 +51,7 @@ const Index = () => {
             </div>
             
             <div className="space-y-4 md:space-y-6">
+              <TalentPoolCard />
               <ProfileCompletionCard />
               <UpcomingInterviews />
               <AchievementsBadges />

@@ -22,6 +22,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
+import { initializeRazorpayPayment, createRazorpayOrder } from "@/lib/razorpay";
 
 const TokensPage: React.FC = () => {
   const [balance, setBalance] = React.useState(() => tokenSystem.getBalance());
@@ -29,6 +30,9 @@ const TokensPage: React.FC = () => {
     tokenSystem.getTransactions()
   );
   const [purchasing, setPurchasing] = React.useState(false);
+  
+  // Developer mode - bypass payment for testing
+  const isDeveloperMode = import.meta.env.DEV || import.meta.env.VITE_DEVELOPER_MODE === 'true';
 
   const refreshData = () => {
     setBalance(tokenSystem.getBalance());
@@ -41,22 +45,142 @@ const TokensPage: React.FC = () => {
   }, []);
 
   const handlePurchase = async (packageId: string) => {
-    setPurchasing(true);
-    
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    const success = tokenSystem.purchaseTokens(packageId);
-    
-    if (success) {
-      const pkg = TOKEN_PACKAGES.find((p) => p.id === packageId);
-      toast.success(`Successfully purchased ${pkg?.name}! ${pkg?.tokens} tokens added to your account.`);
-      refreshData();
-    } else {
-      toast.error("Purchase failed. Please try again.");
+    const pkg = TOKEN_PACKAGES.find((p) => p.id === packageId);
+    if (!pkg) {
+      toast.error("Package not found");
+      return;
     }
-    
-    setPurchasing(false);
+
+    setPurchasing(true);
+
+    // Developer Mode: Skip payment and directly add tokens
+    if (isDeveloperMode) {
+      try {
+        // Simulate payment processing delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        // Add tokens directly
+        const success = tokenSystem.purchaseTokens(packageId);
+        
+        if (success) {
+          toast.success(
+            `[Developer Mode] Payment successful! ${pkg.tokens} tokens added to your account.`,
+            {
+              description: "Payment bypassed in developer mode",
+              duration: 5000,
+            }
+          );
+          refreshData();
+        } else {
+          toast.error("Failed to add tokens. Please try again.");
+        }
+      } catch (error: any) {
+        console.error("Token addition error:", error);
+        toast.error("Failed to add tokens. Please try again.");
+      } finally {
+        setPurchasing(false);
+      }
+      return;
+    }
+
+    // Production Mode: Use actual Razorpay payment
+    try {
+      // Get Razorpay Key ID from environment or use test key
+      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag";
+      
+      if (!razorpayKey || !razorpayKey.startsWith('rzp_')) {
+        toast.error("Razorpay Key ID is not configured. Please add VITE_RAZORPAY_KEY_ID to your .env file.");
+        setPurchasing(false);
+        return;
+      }
+
+      // For testing without backend, we can skip order creation
+      // Razorpay will create order automatically
+      // In production, create order on backend first
+      let orderId: string | undefined;
+      
+      try {
+        // Try to create order (if backend is available)
+        const { orderId: createdOrderId } = await createRazorpayOrder(pkg.price * 100);
+        orderId = createdOrderId;
+      } catch (error) {
+        console.warn("Order creation failed, proceeding without order_id (for testing):", error);
+        // Continue without order_id for testing
+      }
+
+      // Initialize Razorpay payment
+      await initializeRazorpayPayment(
+        {
+          key: razorpayKey,
+          amount: pkg.price * 100, // Amount in paise
+          currency: "INR",
+          name: "Viyuktha AI",
+          description: `Purchase ${pkg.name} - ${pkg.tokens} tokens`,
+          ...(orderId && { order_id: orderId }), // Only include if order_id exists
+          prefill: {
+            name: "Company Name", // Get from user profile
+            email: "company@example.com", // Get from user profile
+            contact: "+919876543210", // Get from user profile
+          },
+          theme: {
+            color: "#6366f1", // Primary color
+          },
+        },
+        async (response) => {
+          // Payment successful
+          console.log("Payment successful:", response);
+          
+          try {
+            // Verify payment on backend (in production, this is critical)
+            // const { verifyPayment } = await import('@/lib/razorpay');
+            // const verified = await verifyPayment(
+            //   response.razorpay_order_id,
+            //   response.razorpay_payment_id,
+            //   response.razorpay_signature
+            // );
+            // 
+            // if (!verified) {
+            //   toast.error("Payment verification failed. Please contact support.");
+            //   setPurchasing(false);
+            //   return;
+            // }
+
+            // Add tokens after successful payment
+            const success = tokenSystem.purchaseTokens(packageId);
+            
+            if (success) {
+              toast.success(
+                `Payment successful! ${pkg.tokens} tokens added to your account.`,
+                {
+                  description: `Payment ID: ${response.razorpay_payment_id?.substring(0, 20) || 'N/A'}...`,
+                  duration: 5000,
+                }
+              );
+              refreshData();
+            } else {
+              toast.error("Failed to add tokens. Please contact support with your payment ID.");
+            }
+          } catch (error: any) {
+            console.error("Token addition error:", error);
+            toast.error("Payment successful but failed to add tokens. Please contact support.");
+          }
+          
+          setPurchasing(false);
+        },
+        (error) => {
+          // Payment failed or cancelled
+          console.error("Payment error:", error);
+          const errorMessage = error?.message || error?.error?.description || "Payment failed. Please try again.";
+          toast.error(errorMessage);
+          setPurchasing(false);
+        }
+      );
+    } catch (error: any) {
+      console.error("Purchase error:", error);
+      const errorMessage = error?.message || "Failed to initialize payment. Please try again.";
+      toast.error(errorMessage);
+      setPurchasing(false);
+    }
   };
 
   const usagePercentage = balance.total > 0 ? (balance.used / balance.total) * 100 : 0;
@@ -70,9 +194,21 @@ const TokensPage: React.FC = () => {
           <main className="p-4 md:p-6 space-y-6">
             {/* Header */}
             <div>
-              <h1 className="text-3xl font-bold mb-2">Interview Tokens</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold">Interview Tokens</h1>
+                {isDeveloperMode && (
+                  <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+                    Developer Mode
+                  </Badge>
+                )}
+              </div>
               <p className="text-muted-foreground">
                 Purchase tokens to conduct interviews. Each interview type costs different tokens.
+                {isDeveloperMode && (
+                  <span className="block mt-1 text-yellow-600 text-sm font-medium">
+                    ⚠️ Developer mode active: Payments are bypassed and tokens are added automatically.
+                  </span>
+                )}
               </p>
             </div>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -8,7 +8,6 @@ import visibilityAnimation from "@/assets/visibility-animation.json";
 import voiceAnimation from "@/assets/voice-animation.json";
 import tabAnimation from "@/assets/tab-animation.json";
 import faceAnimation from "@/assets/face-animation.json";
-import { useNavigate } from "react-router-dom";
 
 interface GuidelinesModalProps {
   isOpen: boolean;
@@ -17,7 +16,13 @@ interface GuidelinesModalProps {
 
 export const GuidelinesModal = ({ isOpen, onComplete }: GuidelinesModalProps) => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const navigate = useNavigate();
+  
+  // Reset slide when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentSlide(0);
+    }
+  }, [isOpen]);
 
   const guidelines = [
     {
@@ -46,14 +51,7 @@ export const GuidelinesModal = ({ isOpen, onComplete }: GuidelinesModalProps) =>
     if (currentSlide < guidelines.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
-      // Get category and settings from URL params
-      const params = new URLSearchParams(window.location.search);
-      const category = params.get('category') || 'general';
-      const level = params.get('level') || 'intermediate';
-      const questions = params.get('questions') || '5';
-      
-      // Navigate to AI interview with category
-      navigate(`/ai-interview?category=${category}&level=${level}&questions=${questions}`);
+      // Just close the modal, don't navigate (we're already on the interview page)
       onComplete();
     }
   };

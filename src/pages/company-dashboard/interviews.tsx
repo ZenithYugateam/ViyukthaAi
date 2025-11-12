@@ -2,21 +2,23 @@ import React from "react";
 import Sidebar from "@/components/company-dashboard/Sidebar";
 import TopNav from "@/components/company-dashboard/TopNav";
 import { PageTransition } from "@/components/company-dashboard/PageTransition";
-import { mockData, Interview } from "@/data/mock-company-dashboard";
+import { mockData, Interview, InterviewSession } from "@/data/mock-company-dashboard";
 import { motion, AnimatePresence } from "framer-motion";
-
-type InterviewStatus = "Ongoing" | "Completed" | "Scheduled";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Download, MessageSquare, FileText, Calendar, CheckSquare, Square } from "lucide-react";
+import { X, Download, MessageSquare, FileText, Calendar, CheckSquare, Square, Video, Clock, TrendingUp, Award, Play } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { scheduleSystem } from "@/data/schedules";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+
+type InterviewStatus = "Ongoing" | "Completed" | "Scheduled";
 
 const InterviewsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,10 +27,22 @@ const InterviewsPage: React.FC = () => {
   const [selectedInterview, setSelectedInterview] = React.useState<Interview | null>(null);
   const [selectedCandidates, setSelectedCandidates] = React.useState<Set<string>>(new Set());
   const [showScheduleModal, setShowScheduleModal] = React.useState(false);
+  const [jobSessions, setJobSessions] = React.useState<Map<string, InterviewSession[]>>(new Map());
 
   React.useEffect(() => {
     // Refresh interviews when component mounts
-    const refreshInterviews = () => setInterviews(mockData.getInterviews());
+    const refreshInterviews = () => {
+      setInterviews(mockData.getInterviews());
+      // Load interview sessions grouped by job
+      const sessions = mockData.getInterviewSessions();
+      const grouped = new Map<string, InterviewSession[]>();
+      sessions.forEach(session => {
+        const existing = grouped.get(session.jobId) || [];
+        grouped.set(session.jobId, [...existing, session]);
+      });
+      setJobSessions(grouped);
+    };
+    refreshInterviews();
     window.addEventListener("focus", refreshInterviews);
     return () => window.removeEventListener("focus", refreshInterviews);
   }, []);
@@ -251,54 +265,171 @@ const InterviewsPage: React.FC = () => {
 
                 <div className="space-y-3">
                   <h3 className="text-sm font-medium">Candidates</h3>
-                  {selectedInterview.candidateList.map((candidate) => (
-                    <Card key={candidate.id}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="text-base">{candidate.name}</CardTitle>
-                            <p className="text-sm text-muted-foreground">{candidate.email}</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-semibold">{candidate.score}</div>
-                            <div className="text-xs text-muted-foreground">Score</div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium">Status:</span>
-                            <span
-                              className={
-                                "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium " +
-                                (candidate.status === "Passed"
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : candidate.status === "Failed"
-                                  ? "bg-red-100 text-red-700"
-                                  : "bg-amber-100 text-amber-700")
-                              }
-                            >
-                              {candidate.status}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium mb-1">AI Remarks:</p>
-                            <p className="text-sm text-muted-foreground">{candidate.aiRemarks}</p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => navigate(`/company-dashboard/candidate/RPT-00${selectedInterview.candidateList.indexOf(candidate) + 1}`)}
-                          >
-                            <FileText className="h-4 w-4 mr-2" />
-                            View Detailed Report
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {(() => {
+                    // Get interview sessions for this job
+                    const jobId = mockData.getJobs().find(j => j.title === selectedInterview.jobTitle)?.id;
+                    const sessions = jobId ? (jobSessions.get(jobId) || []) : [];
+                    
+                    if (sessions.length === 0) {
+                      return (
+                        <Card>
+                          <CardContent className="p-6 text-center text-muted-foreground">
+                            No interview sessions found for this job.
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+                    
+                    return sessions.map((session) => {
+                      const job = mockData.getJobById(session.jobId);
+                      const answeredQuestions = session.questions.filter(q => q.answer && q.answer.trim() !== "");
+                      const averageAccuracy = answeredQuestions.length > 0
+                        ? answeredQuestions.reduce((sum, q) => sum + (q.accuracy || 0), 0) / answeredQuestions.length
+                        : 0;
+                      const totalTime = session.questions.reduce((sum, q) => sum + q.timeSpent, 0);
+                      
+                      const formatTime = (seconds: number) => {
+                        const mins = Math.floor(seconds / 60);
+                        const secs = seconds % 60;
+                        return `${mins}m ${secs}s`;
+                      };
+                      
+                      return (
+                        <Card key={session.id} className="mb-4">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <CardTitle className="text-base">{session.candidateName}</CardTitle>
+                                <p className="text-sm text-muted-foreground">{session.candidateEmail}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {new Date(session.completedAt || session.startedAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-2xl font-semibold">{session.totalScore?.toFixed(1) || averageAccuracy.toFixed(1)}</div>
+                                <div className="text-xs text-muted-foreground">Overall Score</div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              {/* Overall Scorecard */}
+                              <div className="grid grid-cols-4 gap-2 p-3 bg-muted rounded-lg">
+                                <div className="text-center">
+                                  <div className="text-lg font-semibold">{answeredQuestions.length}/{session.questions.length}</div>
+                                  <div className="text-xs text-muted-foreground">Answered</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-semibold">{averageAccuracy.toFixed(1)}%</div>
+                                  <div className="text-xs text-muted-foreground">Accuracy</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-semibold">{formatTime(totalTime)}</div>
+                                  <div className="text-xs text-muted-foreground">Total Time</div>
+                                </div>
+                                <div className="text-center flex items-center justify-center">
+                                  <Badge
+                                    variant={
+                                      session.overallStatus === "Passed" ? "default" :
+                                      session.overallStatus === "Failed" ? "destructive" :
+                                      "secondary"
+                                    }
+                                    className="text-xs"
+                                  >
+                                    {session.overallStatus || session.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                              
+                              {/* Per-Question Analysis */}
+                              <div className="space-y-3">
+                                <h4 className="text-sm font-medium">Question Analysis</h4>
+                                {session.questions.map((q, index) => (
+                                  <div key={index} className="border rounded-lg p-3 space-y-2">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <Badge variant="outline" className="text-xs">Q{index + 1}</Badge>
+                                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                            <Clock className="h-3 w-3" />
+                                            {formatTime(q.timeSpent)}
+                                          </span>
+                                        </div>
+                                        <p className="text-sm font-medium mb-1">{q.questionText}</p>
+                                        <p className="text-xs text-muted-foreground mb-2">
+                                          <strong>Candidate's Answer:</strong> {q.answer || "No answer"}
+                                        </p>
+                                        {q.answerAnalysis && (
+                                          <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-950 rounded border border-amber-200 dark:border-amber-800">
+                                            <p className="text-xs font-medium text-amber-900 dark:text-amber-100 mb-1">
+                                              Answer Analysis:
+                                            </p>
+                                            <p className="text-xs text-amber-800 dark:text-amber-200">
+                                              {q.answerAnalysis}
+                                            </p>
+                                          </div>
+                                        )}
+                                        {q.correctedAnswer && (
+                                          <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-950 rounded border border-blue-200 dark:border-blue-800">
+                                            <p className="text-xs font-medium text-blue-900 dark:text-blue-100 mb-1">
+                                              Corrected/Expected Answer:
+                                            </p>
+                                            <p className="text-xs text-blue-800 dark:text-blue-200">
+                                              {q.correctedAnswer}
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="flex flex-col items-end gap-1 ml-2">
+                                        {q.accuracy !== undefined ? (
+                                          <>
+                                            <Badge
+                                              variant={q.accuracy >= 70 ? "default" : q.accuracy >= 50 ? "secondary" : "destructive"}
+                                              className="text-xs"
+                                            >
+                                              {q.accuracy.toFixed(1)}%
+                                            </Badge>
+                                            <Progress value={q.accuracy} className="w-16 h-1" />
+                                          </>
+                                        ) : (
+                                          <Badge variant="outline" className="text-xs">Pending</Badge>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Per-Question Video */}
+                                    {q.videoUrl && (
+                                      <div className="mt-2">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <Video className="h-4 w-4 text-muted-foreground" />
+                                          <span className="text-xs text-muted-foreground">Question Video</span>
+                                        </div>
+                                        <video
+                                          src={q.videoUrl}
+                                          controls
+                                          className="w-full rounded border"
+                                          style={{ maxHeight: '200px' }}
+                                        >
+                                          Your browser does not support the video tag.
+                                        </video>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              
+                              {session.aiRemarks && (
+                                <div className="p-3 bg-muted rounded-lg">
+                                  <p className="text-xs font-medium mb-1">AI Remarks:</p>
+                                  <p className="text-sm text-muted-foreground">{session.aiRemarks}</p>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             </motion.div>

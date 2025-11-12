@@ -8,27 +8,61 @@ import { mockData } from "@/data/mock-company-dashboard";
 import { motion } from "framer-motion";
 import { Briefcase, MessageSquare, Bot, LineChart, Plus, TrendingUp, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const CompanyDashboardIndex: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [jobs, setJobs] = React.useState(() => mockData.getJobs());
 
   React.useEffect(() => {
     // Refresh jobs when component mounts or when returning to page
-    const refreshJobs = () => setJobs(mockData.getJobs());
+    const refreshJobs = () => {
+      const allJobs = mockData.getJobs();
+      // Sort by updatedAt descending (newest first)
+      const sortedJobs = [...allJobs].sort((a, b) => {
+        const dateA = new Date(a.updatedAt).getTime();
+        const dateB = new Date(b.updatedAt).getTime();
+        return dateB - dateA;
+      });
+      setJobs(sortedJobs);
+    };
+    refreshJobs(); // Refresh immediately on mount
     window.addEventListener("focus", refreshJobs);
     return () => window.removeEventListener("focus", refreshJobs);
   }, []);
 
-  const recentJobs = jobs.slice(0, 4);
+  React.useEffect(() => {
+    // Refresh jobs whenever location changes to this page
+    if (location.pathname === "/company-dashboard") {
+      const allJobs = mockData.getJobs();
+      // Sort by updatedAt descending (newest first)
+      const sortedJobs = [...allJobs].sort((a, b) => {
+        const dateA = new Date(a.updatedAt).getTime();
+        const dateB = new Date(b.updatedAt).getTime();
+        return dateB - dateA;
+      });
+      setJobs(sortedJobs);
+    }
+  }, [location.pathname]);
+
+  // Sort jobs by updatedAt descending (newest first) for display
+  const sortedJobs = React.useMemo(() => {
+    return [...jobs].sort((a, b) => {
+      const dateA = new Date(a.updatedAt).getTime();
+      const dateB = new Date(b.updatedAt).getTime();
+      return dateB - dateA;
+    });
+  }, [jobs]);
+
+  const recentJobs = sortedJobs.slice(0, 4);
   
-  // Calculate live stats
-  const openJobs = jobs.filter(j => j.status === "Open").length;
-  const closedJobs = jobs.filter(j => j.status === "Closed").length;
-  const totalApplicants = jobs.reduce((sum, j) => sum + j.applicants, 0);
+  // Calculate live stats (use sortedJobs for consistency)
+  const openJobs = sortedJobs.filter(j => j.status === "Open").length;
+  const closedJobs = sortedJobs.filter(j => j.status === "Closed").length;
+  const totalApplicants = sortedJobs.reduce((sum, j) => sum + j.applicants, 0);
 
   const iconMap: Record<string, React.ReactNode> = {
     totalJobs: <Briefcase className="h-5 w-5 text-blue-600" />,
@@ -56,7 +90,7 @@ const CompanyDashboardIndex: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Total Jobs</p>
-                      <h3 className="text-3xl font-bold">{jobs.length}</h3>
+                      <h3 className="text-3xl font-bold">{sortedJobs.length}</h3>
                     </div>
                     <Briefcase className="h-8 w-8 text-blue-600" />
                   </div>

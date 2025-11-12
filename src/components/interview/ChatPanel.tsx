@@ -27,23 +27,49 @@ export const ChatPanel = ({
       setMessage("");
     }
   };
-  return <div className="w-full h-full border-l border-border flex flex-col">
-      
+  return <div className="w-full h-full border-l border-border bg-card flex flex-col shadow-lg">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-border bg-card/50">
+        <h3 className="text-sm font-semibold text-foreground dark:text-foreground">Chat</h3>
+      </div>
 
-      <ScrollArea className="flex-1 p-3 min-h-0">
-        {messages.length === 0 ? <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+      <ScrollArea className="flex-1 p-4 min-h-0">
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground dark:text-muted-foreground text-sm">
             No messages yet
-          </div> : <div className="space-y-3">
-            {messages.map((msg, idx) => <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl px-3 py-2 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
-                  <p className="text-sm">{msg.content}</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {messages.map((msg, idx) => {
+              // Clean markdown formatting
+              const cleanContent = msg.content
+                .replace(/\*\*([^*]+)\*\*/g, '$1')
+                .replace(/\*([^*]+)\*/g, '$1')
+                .replace(/__([^_]+)__/g, '$1')
+                .replace(/_([^_]+)_/g, '$1')
+                .replace(/##+\s*/g, '')
+                .replace(/`([^`]+)`/g, '$1')
+                .replace(/---+/g, '')
+                .trim();
+              
+              return (
+                <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-md ${
+                    msg.role === 'user' 
+                      ? 'bg-foreground dark:bg-foreground text-background dark:text-background font-medium' 
+                      : 'bg-card border border-border text-foreground dark:text-foreground'
+                  }`}>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{cleanContent}</p>
+                  </div>
                 </div>
-              </div>)}
-          </div>}
+              );
+            })}
+          </div>
+        )}
       </ScrollArea>
 
       {/* Input Section */}
-      <div className="p-3 border-t border-border">
+      <div className="p-4 border-t border-border bg-card/50">
         <div className="relative">
           <Textarea
             value={message}
@@ -67,15 +93,15 @@ export const ChatPanel = ({
               return false;
             }}
             placeholder="Type or speak your answer..."
-            className="resize-none pr-24 bg-muted/50 border-border"
+            className="resize-none pr-12 bg-background dark:bg-background border-border text-foreground dark:text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground"
             rows={2}
             disabled={!isInterviewStarted || isLoading}
           />
-          <div className="absolute right-2 bottom-2 flex gap-2">
+          <div className="absolute right-3 bottom-3">
             <Button
               size="icon"
               onClick={handleSend}
-              className="h-8 w-8 rounded-full"
+              className="h-8 w-8 rounded-full bg-foreground dark:bg-foreground text-background dark:text-background hover:opacity-90 shadow-md"
               disabled={!message.trim() || !isInterviewStarted || isLoading}
               title="Send message"
             >

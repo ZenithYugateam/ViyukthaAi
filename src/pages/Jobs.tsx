@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Pagination } from "@/components/Pagination";
 import { Search, MapPin, Briefcase, Clock, Bookmark, X, ChevronDown, Home, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { mockData } from "@/data/mock-company-dashboard";
 
 const jobListings = [
   {
@@ -363,6 +364,69 @@ const Jobs = () => {
   const [clickedJobId, setClickedJobId] = useState<number | null>(null);
   const itemsPerPage = 4;
   
+  // Fetch jobs from mockData and merge with existing hardcoded jobs
+  const [allJobs, setAllJobs] = useState(jobListings);
+  
+  const refreshJobs = () => {
+    const companyJobs = mockData.getJobs().filter(job => job.status === "Open");
+    // Sort by updatedAt descending (newest first)
+    const sortedCompanyJobs = [...companyJobs].sort((a, b) => {
+      const dateA = new Date(a.updatedAt).getTime();
+      const dateB = new Date(b.updatedAt).getTime();
+      return dateB - dateA;
+    });
+    
+    // Transform company jobs to match the jobListings format
+    const transformedJobs = sortedCompanyJobs.map((job, index) => ({
+      id: parseInt(job.id.replace("JOB-", "")) || 10000 + index,
+      title: job.title,
+      company: "Company", // Default company name
+      logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop",
+      location: job.location || "Remote",
+      type: job.type || "Full-time",
+      salary: job.salary || "$50k - $80k",
+      posted: "Recently",
+      tags: job.description ? job.description.split(" ").slice(0, 4) : [],
+      description: job.description || "",
+      experience: job.experience || "2-3 years",
+      matchScore: 75, // Default match score
+      matchLevel: "MEDIUM MATCH",
+      workMode: job.location?.includes("Remote") ? "Remote" : job.location?.includes("Hybrid") ? "Hybrid" : "Onsite",
+      applicants: job.applicants || 0,
+      jobId: job.id, // Store original job ID for interview navigation
+      updatedAt: job.updatedAt, // Include updatedAt for sorting
+    }));
+    
+    // Merge and sort all jobs by updatedAt (newest first)
+    // Add updatedAt to jobListings items for sorting
+    const jobListingsWithDate = jobListings.map(job => ({
+      ...job,
+      updatedAt: new Date().toISOString(), // Use current date for hardcoded jobs
+    }));
+    
+    const allJobsMerged = [...jobListingsWithDate, ...transformedJobs];
+    const sortedAllJobs = allJobsMerged.sort((a, b) => {
+      const dateA = (a as any).updatedAt ? new Date((a as any).updatedAt).getTime() : 0;
+      const dateB = (b as any).updatedAt ? new Date((b as any).updatedAt).getTime() : 0;
+      return dateB - dateA; // Newest first
+    });
+    
+    setAllJobs(sortedAllJobs);
+  };
+  
+  useEffect(() => {
+    refreshJobs();
+    // Refresh when page becomes visible or window gains focus
+    window.addEventListener("focus", refreshJobs);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) refreshJobs();
+    });
+    return () => {
+      window.removeEventListener("focus", refreshJobs);
+      document.removeEventListener("visibilitychange", refreshJobs);
+    };
+  }, []);
+  
   const [filters, setFilters] = useState({
     location: { remote: false, onsite: false, hybrid: false },
     jobType: { fullTime: false, partTime: false, internship: false, projectWork: false, volunteer: false, contract: false },
@@ -377,7 +441,7 @@ const Jobs = () => {
   };
 
   // Filter jobs based on all criteria
-  const filteredJobs = jobListings.filter((job) => {
+  const filteredJobs = allJobs.filter((job) => {
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -475,11 +539,17 @@ const Jobs = () => {
     setCurrentPage(1);
   };
 
-  const handleApplyClick = (job: typeof jobListings[0]) => {
+  const handleApplyClick = (job: any) => {
     setClickedJobId(job.id);
     setTimeout(() => {
       setClickedJobId(null);
-      navigate(`/jobs/${job.id}`, { state: { job } });
+      // Always navigate to job details page first
+      // Job details page will show "Start Interview" button if job has jobId
+      if (job.jobId) {
+        navigate(`/jobs/${job.jobId}`, { state: { job } });
+      } else {
+        navigate(`/jobs/${job.id}`, { state: { job } });
+      }
     }, 600);
   };
 

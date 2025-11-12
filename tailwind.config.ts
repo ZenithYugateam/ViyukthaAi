@@ -110,11 +110,20 @@ export default {
             opacity: "1",
           },
         },
+        "voice-gradient": {
+          "0%": {
+            backgroundPosition: "-200% 0",
+          },
+          "100%": {
+            backgroundPosition: "200% 0",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "slide-arrow": "slide-arrow 0.6s ease-in-out",
+        "voice-gradient": "voice-gradient 2s linear infinite",
       },
     },
   },

@@ -36,6 +36,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const QuickHirePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -383,11 +384,12 @@ const QuickHirePage: React.FC = () => {
                       <CardHeader className="pb-3">
                         <div className="flex items-start gap-3">
                           <div className="relative">
-                            <img
-                              src={candidate.avatar}
-                              alt={candidate.name}
-                              className="w-16 h-16 rounded-full border-2 border-primary"
-                            />
+                            <Avatar className="w-16 h-16 border-2 border-primary bg-gradient-to-br from-primary/20 to-primary/10">
+                              <AvatarImage src={candidate.avatar || undefined} alt={candidate.name} />
+                              <AvatarFallback className="text-lg font-semibold bg-gradient-to-br from-primary/30 to-primary/20 text-primary-foreground">
+                                {candidate.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
                             {candidate.isVerified && (
                               <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
                                 <CheckCircle2 className="h-3 w-3 text-white" />
@@ -511,11 +513,12 @@ const QuickHirePage: React.FC = () => {
                   {/* Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4">
-                      <img
-                        src={selectedCandidate.avatar}
-                        alt={selectedCandidate.name}
-                        className="w-20 h-20 rounded-full border-2 border-primary"
-                      />
+                      <Avatar className="w-20 h-20 border-2 border-primary bg-gradient-to-br from-primary/20 to-primary/10">
+                        <AvatarImage src={selectedCandidate.avatar || undefined} alt={selectedCandidate.name} />
+                        <AvatarFallback className="text-2xl font-semibold bg-gradient-to-br from-primary/30 to-primary/20 text-primary-foreground">
+                          {selectedCandidate.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       <div>
                         <h2 className="text-2xl font-bold">{selectedCandidate.name}</h2>
                         <p className="text-lg text-muted-foreground">{selectedCandidate.title}</p>

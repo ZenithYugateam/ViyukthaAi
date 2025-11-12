@@ -3,7 +3,7 @@
 export type Job = {
   id: string;
   title: string;
-  department: string;
+  department?: string; // Made optional - removed from form
   status: "Open" | "Paused" | "Closed";
   applicants: number;
   updatedAt: string;
@@ -13,6 +13,7 @@ export type Job = {
   salary?: string;
   type?: string;
   deadline?: string;
+  interviewDuration?: string; // Duration in minutes
 };
 
 export type Question = {
@@ -23,6 +24,35 @@ export type Question = {
   type: "Text" | "MCQ" | "Code" | "Voice";
   evalMode: "Auto" | "Manual";
   options?: string[];
+  difficulty?: "Easy" | "Medium" | "Hard" | "Mixed";
+  expectedAnswer?: string;
+  interviewRound?: "General" | "Technical" | "HR";
+};
+
+export type InterviewSession = {
+  id: string;
+  jobId: string;
+  candidateId: string;
+  candidateName: string;
+  candidateEmail: string;
+  startedAt: string;
+  completedAt?: string;
+  status: "In Progress" | "Completed" | "Abandoned";
+  questions: Array<{
+    questionId: string;
+    questionText: string;
+    answer: string;
+    timeSpent: number; // in seconds
+    accuracy?: number; // 0-100
+    evaluatedAt?: string;
+    videoUrl?: string; // Video URL for this specific question
+    correctedAnswer?: string; // AI-generated corrected/expected answer based on candidate's response
+    answerAnalysis?: string; // Brief analysis of how candidate answered the question
+  }>;
+  totalScore?: number;
+  aiRemarks?: string;
+  overallStatus?: "Passed" | "Failed" | "Pending";
+  videoUrl?: string; // URL to full recorded video
 };
 
 export type Interview = {
@@ -242,6 +272,7 @@ const STORAGE_KEYS = {
   QUESTIONS: "companyDashboard.questions.v1",
   INTERVIEWS: "companyDashboard.interviews.v1",
   INSIGHTS: "companyDashboard.insights.v1",
+  INTERVIEW_SESSIONS: "companyDashboard.interviewSessions.v1",
 };
 
 // Helper functions for localStorage operations
@@ -352,11 +383,42 @@ export const mockData = {
     saveToStorage(STORAGE_KEYS.INSIGHTS, insights);
   },
 
+  // Interview Sessions CRUD
+  getInterviewSessions: (): InterviewSession[] => {
+    return loadFromStorage<InterviewSession[]>(STORAGE_KEYS.INTERVIEW_SESSIONS, []);
+  },
+  
+  getInterviewSessionById: (id: string): InterviewSession | undefined => {
+    const sessions = loadFromStorage<InterviewSession[]>(STORAGE_KEYS.INTERVIEW_SESSIONS, []);
+    return sessions.find((session) => session.id === id);
+  },
+  
+  getInterviewSessionsByJobId: (jobId: string): InterviewSession[] => {
+    const sessions = loadFromStorage<InterviewSession[]>(STORAGE_KEYS.INTERVIEW_SESSIONS, []);
+    return sessions.filter((session) => session.jobId === jobId);
+  },
+  
+  addInterviewSession: (session: InterviewSession): void => {
+    const sessions = loadFromStorage<InterviewSession[]>(STORAGE_KEYS.INTERVIEW_SESSIONS, []);
+    sessions.push(session);
+    saveToStorage(STORAGE_KEYS.INTERVIEW_SESSIONS, sessions);
+  },
+  
+  updateInterviewSession: (id: string, updates: Partial<InterviewSession>): void => {
+    const sessions = loadFromStorage<InterviewSession[]>(STORAGE_KEYS.INTERVIEW_SESSIONS, []);
+    const index = sessions.findIndex((session) => session.id === id);
+    if (index !== -1) {
+      sessions[index] = { ...sessions[index], ...updates };
+      saveToStorage(STORAGE_KEYS.INTERVIEW_SESSIONS, sessions);
+    }
+  },
+
   // Reset all data
   resetAll: (): void => {
     saveToStorage(STORAGE_KEYS.JOBS, initialJobs);
     saveToStorage(STORAGE_KEYS.QUESTIONS, initialQuestions);
     saveToStorage(STORAGE_KEYS.INTERVIEWS, initialInterviews);
     saveToStorage(STORAGE_KEYS.INSIGHTS, initialInsights);
+    saveToStorage(STORAGE_KEYS.INTERVIEW_SESSIONS, []);
   },
 };

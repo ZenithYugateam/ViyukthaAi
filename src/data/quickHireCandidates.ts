@@ -64,7 +64,7 @@ export const mockCandidates: Candidate[] = [
     name: "Priya Sharma",
     title: "Senior Frontend Developer",
     location: "Bangalore, India",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya",
+    avatar: "", // Use Meta-style initials fallback
     experience: "5 years",
     expectedSalary: "₹15-20 LPA",
     availability: "2 Weeks",
@@ -124,7 +124,7 @@ export const mockCandidates: Candidate[] = [
     name: "Rahul Verma",
     title: "Backend Engineer",
     location: "Mumbai, India",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul",
+    avatar: "", // Use Meta-style initials fallback
     experience: "4 years",
     expectedSalary: "₹12-18 LPA",
     availability: "Immediate",
@@ -181,7 +181,7 @@ export const mockCandidates: Candidate[] = [
     name: "Ananya Patel",
     title: "UI/UX Designer",
     location: "Pune, India",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ananya",
+    avatar: "", // Use Meta-style initials fallback
     experience: "3 years",
     expectedSalary: "₹10-15 LPA",
     availability: "1 Month",
@@ -239,7 +239,7 @@ export const mockCandidates: Candidate[] = [
     name: "Arjun Singh",
     title: "Full Stack Developer",
     location: "Delhi, India",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun",
+    avatar: "", // Use Meta-style initials fallback
     experience: "6 years",
     expectedSalary: "₹18-25 LPA",
     availability: "Negotiable",
@@ -298,7 +298,7 @@ export const mockCandidates: Candidate[] = [
     name: "Sneha Reddy",
     title: "Data Scientist",
     location: "Hyderabad, India",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha",
+    avatar: "", // Use Meta-style initials fallback
     experience: "4 years",
     expectedSalary: "₹15-22 LPA",
     availability: "2 Weeks",
@@ -355,7 +355,7 @@ export const mockCandidates: Candidate[] = [
     name: "Vikram Malhotra",
     title: "DevOps Engineer",
     location: "Bangalore, India",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Vikram",
+    avatar: "", // Use Meta-style initials fallback
     experience: "5 years",
     expectedSalary: "₹16-23 LPA",
     availability: "Immediate",
@@ -412,7 +412,7 @@ export const mockCandidates: Candidate[] = [
     name: "Meera Krishnan",
     title: "Mobile App Developer",
     location: "Chennai, India",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Meera",
+    avatar: "", // Use Meta-style initials fallback
     experience: "3 years",
     expectedSalary: "₹10-16 LPA",
     availability: "1 Month",
@@ -471,7 +471,7 @@ export const mockCandidates: Candidate[] = [
     name: "Karthik Iyer",
     title: "Product Manager",
     location: "Bangalore, India",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Karthik",
+    avatar: "", // Use Meta-style initials fallback
     experience: "7 years",
     expectedSalary: "₹25-35 LPA",
     availability: "Negotiable",

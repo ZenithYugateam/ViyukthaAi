@@ -12,6 +12,8 @@ import Resume from "./pages/Resume";
 import Interviews from "./pages/Interviews";
 import PermissionsTest from "./pages/PermissionsTest";
 import AIInterview from "./pages/AIInterview";
+import JobInterview from "./pages/JobInterview";
+import InterviewResults from "./pages/InterviewResults";
 import Portfolio from "./pages/Portfolio";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -49,6 +51,32 @@ const AnimatedRoutes = () => {
                 transition={{ duration: 0.2 }}
               >
                 <AIInterview />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/job-interview/:jobId"
+            element={
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <JobInterview />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/interview-results/:sessionId"
+            element={
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <InterviewResults />
               </motion.div>
             }
           />

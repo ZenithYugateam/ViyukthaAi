@@ -57,10 +57,10 @@ export const InterviewControls = ({
           console.log("Camera button clicked, current state:", isCameraOn);
           onToggleCamera();
         }}
-        className={`h-10 w-10 rounded-full flex-shrink-0 ${
+        className={`h-10 w-10 rounded-full flex-shrink-0 shadow-md ${
           isCameraOn 
-            ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-            : 'bg-muted hover:bg-muted/80'
+            ? 'bg-foreground dark:bg-foreground hover:opacity-90 text-background dark:text-background' 
+            : 'bg-muted hover:bg-muted/80 text-muted-foreground'
         }`}
       >
         {isCameraOn ? <Camera className="h-4 w-4" /> : <CameraOff className="h-4 w-4" />}

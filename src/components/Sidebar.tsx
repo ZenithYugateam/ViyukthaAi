@@ -11,9 +11,6 @@ import {
   LogOut,
   ChevronRight,
   Menu,
-  Building2,
-  Users,
-  PlusCircle
 } from "lucide-react";
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { cn } from "@/lib/utils";
@@ -28,12 +25,6 @@ const candidateNavItems = [
   { title: "Profile", icon: FolderKanban, path: "/portfolio" },
   { title: "Report Analysis", icon: BarChart3, path: "/reports" },
   { title: "Settings", icon: Settings, path: "/settings" },
-];
-
-const companyNavItems = [
-  { title: "Company Dashboard", icon: Building2, path: "/company" },
-  { title: "Manage Jobs", icon: Briefcase, path: "/company/jobs" },
-  { title: "Post New Job", icon: PlusCircle, path: "/company/jobs/new" },
 ];
 
 const SidebarContent = ({ isExpanded, onNavigate }: { isExpanded: boolean; onNavigate?: () => void }) => (
@@ -61,56 +52,6 @@ const SidebarContent = ({ isExpanded, onNavigate }: { isExpanded: boolean; onNav
         </div>
       )}
       {candidateNavItems.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative group transform overflow-hidden",
-              isActive
-                ? "gradient-primary text-primary-foreground shadow-md scale-105"
-                : "text-foreground hover:bg-primary/10 hover:scale-105 hover:shadow-sm"
-            )
-          }
-        >
-          {({ isActive }) => (
-            <>
-              {/* Curved Outside Bubble for Active Tab */}
-              {isActive && (
-                <>
-                  <span className="absolute -right-5 top-0 h-full w-5 bg-background rounded-l-full shadow-sm" />
-                  <span className="absolute -left-5 top-0 h-full w-5 bg-background rounded-r-full shadow-sm" />
-                </>
-              )}
-
-              <item.icon className="w-5 h-5 flex-shrink-0 z-10" />
-              {isExpanded && (
-                <span className="text-sm font-medium whitespace-nowrap z-10">
-                  {item.title}
-                </span>
-              )}
-              {!isExpanded && (
-                <div className="absolute left-full ml-6 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg border border-border">
-                  {item.title}
-                  <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-4 border-transparent border-r-popover" />
-                </div>
-              )}
-            </>
-          )}
-        </NavLink>
-      ))}
-
-      {/* Company Section */}
-      {isExpanded && (
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 px-4 border-t border-border pt-4">
-          Company
-        </div>
-      )}
-      {!isExpanded && (
-        <div className="border-t border-border my-4" />
-      )}
-      {companyNavItems.map((item) => (
         <NavLink
           key={item.path}
           to={item.path}
