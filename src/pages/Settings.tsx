@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Mail, Phone, MapPin, Briefcase, Bell, Lock, Globe } from "lucide-react";
-import femaleAvatar from "@/assets/female-avatar.jpg";
+import maleAvatar from "@/assets/male-avatar.jpg";
 
 const Settings = () => {
   return (
@@ -22,7 +22,7 @@ const Settings = () => {
         
         <div className="flex items-center gap-6 mb-6">
           <Avatar className="w-24 h-24 border-2 border-primary/20">
-            <AvatarImage src={femaleAvatar} alt="Profile" />
+            <AvatarImage src={maleAvatar} alt="Profile" />
             <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/20 text-primary-foreground font-semibold text-lg">
               PS
             </AvatarFallback>
@@ -38,7 +38,7 @@ const Settings = () => {
             <Label htmlFor="firstName">First Name</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input id="firstName" placeholder="Arjun" className="pl-10" defaultValue="Arjun" />
+              <Input id="firstName" placeholder="Prabhas" className="pl-10" defaultValue="Prabhas" />
             </div>
           </div>
 
@@ -46,7 +46,7 @@ const Settings = () => {
             <Label htmlFor="lastName">Last Name</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input id="lastName" placeholder="Kumar" className="pl-10" defaultValue="Kumar" />
+              <Input id="lastName" placeholder="Satti" className="pl-10" defaultValue="Satti" />
             </div>
           </div>
 
@@ -54,7 +54,7 @@ const Settings = () => {
             <Label htmlFor="email">Email Address</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input id="email" type="email" placeholder="arjun@example.com" className="pl-10" defaultValue="arjun@example.com" />
+              <Input id="email" type="email" placeholder="prabhas.satti@example.com" className="pl-10" defaultValue="prabhas.satti@example.com" />
             </div>
           </div>
 

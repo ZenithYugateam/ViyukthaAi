@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useParams, useNavigate } from "react-router-dom";
+import { generateCandidateReportPDF } from "@/utils/pdfGenerator";
 
 const CandidateAnalyticsPage: React.FC = () => {
   const { candidateId } = useParams<{ candidateId: string }>();
@@ -149,7 +150,18 @@ const CandidateAnalyticsPage: React.FC = () => {
   };
 
   const handleDownloadReport = () => {
-    toast.success("Report downloaded successfully!");
+    if (!report) {
+      toast.error("No report available to download");
+      return;
+    }
+    
+    try {
+      generateCandidateReportPDF(report);
+      toast.success("Report downloaded successfully!");
+    } catch (error) {
+      console.error("Error downloading report:", error);
+      toast.error("Failed to download report. Please try again.");
+    }
   };
 
   const handleShareReport = () => {

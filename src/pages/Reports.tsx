@@ -16,7 +16,8 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
-  Clock
+  Clock,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,6 +146,204 @@ const Reports = () => {
     return "destructive";
   };
 
+  const handleDownloadReport = (report: InterviewReport) => {
+    try {
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let yPos = margin;
+      const lineHeight = 7;
+      const sectionSpacing = 10;
+
+      const checkNewPage = (requiredSpace: number) => {
+        if (yPos + requiredSpace > pageHeight - margin) {
+          pdf.addPage();
+          yPos = margin;
+          return true;
+        }
+        return false;
+      };
+
+      const addText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 10) => {
+        pdf.setFontSize(fontSize);
+        const lines = pdf.splitTextToSize(text, maxWidth);
+        pdf.text(lines, x, y);
+        return lines.length * (fontSize * 0.4);
+      };
+
+      // Header
+      pdf.setFillColor(30, 58, 138);
+      pdf.rect(0, 0, pageWidth, 40, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(24);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Interview Report', margin, 25);
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, margin, 35);
+      
+      yPos = 50;
+      pdf.setTextColor(0, 0, 0);
+
+      // Interview Information
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Interview Information', margin, yPos);
+      yPos += lineHeight + 2;
+
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      yPos += addText(`Category: ${formatCategory(report.session.category)}`, margin, yPos, pageWidth - 2 * margin);
+      yPos += lineHeight;
+      yPos += addText(`Level: ${report.session.level}`, margin, yPos, pageWidth - 2 * margin);
+      yPos += lineHeight;
+      yPos += addText(`Date: ${formatDate(report.session.completed_at)}`, margin, yPos, pageWidth - 2 * margin);
+      yPos += sectionSpacing;
+
+      // Overall Score
+      checkNewPage(30);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Overall Performance', margin, yPos);
+      yPos += lineHeight + 2;
+
+      pdf.setFontSize(32);
+      pdf.setFont('helvetica', 'bold');
+      const scoreColor = report.overall_score >= 80 ? [34, 197, 94] : report.overall_score >= 60 ? [251, 191, 36] : [239, 68, 68];
+      pdf.setTextColor(...scoreColor);
+      pdf.text(`${report.overall_score}%`, margin, yPos);
+      pdf.setTextColor(0, 0, 0);
+      yPos += lineHeight + 5;
+
+      // Score Breakdown
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Score Breakdown', margin, yPos);
+      yPos += lineHeight + 2;
+
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      yPos += addText(`Technical Knowledge: ${report.technical_knowledge}%`, margin, yPos, pageWidth - 2 * margin);
+      yPos += lineHeight;
+      yPos += addText(`Communication Skills: ${report.communication_skills}%`, margin, yPos, pageWidth - 2 * margin);
+      yPos += lineHeight;
+      yPos += addText(`Confidence Level: ${report.confidence_level}%`, margin, yPos, pageWidth - 2 * margin);
+      yPos += lineHeight;
+      yPos += addText(`Problem Solving: ${report.problem_solving}%`, margin, yPos, pageWidth - 2 * margin);
+      yPos += sectionSpacing;
+
+      // AI Summary
+      if (report.ai_summary) {
+        checkNewPage(40);
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('AI Assessment Summary', margin, yPos);
+        yPos += lineHeight + 2;
+
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        const summaryHeight = addText(report.ai_summary, margin, yPos, pageWidth - 2 * margin);
+        yPos += summaryHeight + sectionSpacing;
+      }
+
+      // Strengths
+      if (report.strengths && report.strengths.length > 0) {
+        checkNewPage(30);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(34, 197, 94);
+        pdf.text('Strengths', margin, yPos);
+        pdf.setTextColor(0, 0, 0);
+        yPos += lineHeight + 2;
+
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        report.strengths.forEach((strength) => {
+          checkNewPage(8);
+          pdf.text(`• ${strength}`, margin + 5, yPos);
+          yPos += lineHeight;
+        });
+        yPos += sectionSpacing - 5;
+      }
+
+      // Areas for Improvement
+      if (report.improvements && report.improvements.length > 0) {
+        checkNewPage(30);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(251, 191, 36);
+        pdf.text('Areas for Improvement', margin, yPos);
+        pdf.setTextColor(0, 0, 0);
+        yPos += lineHeight + 2;
+
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        report.improvements.forEach((improvement) => {
+          checkNewPage(8);
+          pdf.text(`• ${improvement}`, margin + 5, yPos);
+          yPos += lineHeight;
+        });
+        yPos += sectionSpacing - 5;
+      }
+
+      // Conversation History
+      if (report.conversation_history && Array.isArray(report.conversation_history)) {
+        const userMessages = report.conversation_history.filter((msg: any) => msg.role === "user");
+        if (userMessages.length > 0) {
+          checkNewPage(40);
+          pdf.setFontSize(16);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Your Responses', margin, yPos);
+          yPos += lineHeight + 3;
+
+          userMessages.forEach((msg: any, index: number) => {
+            checkNewPage(20);
+            pdf.setFontSize(10);
+            pdf.setFont('helvetica', 'normal');
+            const responseHeight = addText(`Q${index + 1}: ${msg.content || 'No response'}`, margin + 5, yPos, pageWidth - 2 * margin - 5);
+            yPos += responseHeight + 5;
+          });
+        }
+      }
+
+      // Footer
+      const totalPages = pdf.internal.pages.length - 1;
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(128, 128, 128);
+        pdf.text(
+          `Page ${i} of ${totalPages}`,
+          pageWidth / 2,
+          pageHeight - 10,
+          { align: 'center' }
+        );
+      }
+
+      const fileName = `Interview_Report_${formatCategory(report.session.category)}_${formatDate(report.session.completed_at).replace(/\s+/g, '_')}.pdf`;
+      pdf.save(fileName);
+      
+      toast({
+        title: "Success",
+        description: "Report downloaded successfully!",
+      });
+    } catch (error) {
+      console.error("Error downloading report:", error);
+      toast({
+        title: "Error",
+        description: "Failed to download report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -268,6 +467,15 @@ const Reports = () => {
                             {report.overall_score}%
                           </p>
                         </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadReport(report)}
+                          className="hidden sm:flex"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

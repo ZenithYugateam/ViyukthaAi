@@ -247,18 +247,6 @@ const CompanyDashboardIndex: React.FC = () => {
                 </Table>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-                <CardTitle className="text-sm">Pipeline Overview</CardTitle>
-                <LineChart className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 rounded-lg border border-dashed flex items-center justify-center text-sm text-muted-foreground">
-                  Line chart placeholder
-                </div>
-              </CardContent>
-            </Card>
           </div>
           </main>
         </div>

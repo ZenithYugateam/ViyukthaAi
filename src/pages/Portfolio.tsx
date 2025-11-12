@@ -24,17 +24,17 @@ import {
   FileUp,
 } from "lucide-react";
 import { toast } from "sonner";
-import femaleAvatar from "@/assets/female-avatar.jpg";
+import maleAvatar from "@/assets/male-avatar.jpg";
 
 const candidateData = {
-  name: "Priya Sharma",
+  name: "Prabhas Satti",
   role: "Full Stack Developer & AI Enthusiast",
   location: "Bangalore, Karnataka, India",
-  email: "priya.sharma@example.com",
+  email: "prabhas.satti@example.com",
   phone: "+91 98765 43210",
-  linkedin: "linkedin.com/in/priyasharma",
-  github: "github.com/priyasharma",
-  avatar: femaleAvatar,
+  linkedin: "linkedin.com/in/prabhassatti",
+  github: "github.com/prabhassatti",
+  avatar: maleAvatar,
   about:
     "Passionate full-stack developer with 3+ years of experience building scalable web applications. Specialized in React, Node.js, and AI integration. Committed to writing clean, efficient code and staying updated with emerging technologies.",
 

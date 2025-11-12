@@ -44,6 +44,25 @@ const InterviewResults = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Thank You Message */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+              <CheckCircle2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground mb-1">Thank You for Completing the Interview!</h2>
+              <p className="text-muted-foreground">
+                Your responses have been recorded and analyzed. Review your performance below.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

@@ -37,6 +37,7 @@ import { createWorker } from "tesseract.js";
 import { supabase } from "@/integrations/supabase/client";
 import { generateResumePDF } from "@/utils/pdfGenerator";
 import { FaangPathTemplate } from "./templates/FaangPathTemplate";
+import { getGroqApiKey } from "@/lib/ai/groqKeyRotation";
 
 // ------------------------- Types -------------------------
 
@@ -442,10 +443,29 @@ ${extractedTextLocal}
 
       // Grok endpoint and key from environment
       const GROK_URL = "https://api.groq.com/openai/v1/chat/completions";
-      const GROK_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_API_KEY;
-
-      if (!GROK_KEY) {
-        throw new Error("Grok API key not found. Set VITE_GROQ_API_KEY or VITE_GROK_API_KEY in your .env file.");
+      
+      // Use key rotation system to get API key (supports single key, comma-separated keys, or numbered keys)
+      let GROK_KEY: string;
+      try {
+        GROK_KEY = getGroqApiKey();
+      } catch (error: any) {
+        // Fallback to direct env check if key rotation fails
+        const singleKey = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_API_KEY;
+        const multipleKeys = import.meta.env.VITE_GROQ_API_KEYS;
+        
+        if (singleKey) {
+          GROK_KEY = singleKey;
+        } else if (multipleKeys) {
+          // Use first key from comma-separated list
+          const keys = multipleKeys.split(',').map(k => k.trim()).filter(k => k);
+          if (keys.length > 0) {
+            GROK_KEY = keys[0];
+          } else {
+            throw new Error("Grok API key not found. Set VITE_GROQ_API_KEY, VITE_GROK_API_KEY, or VITE_GROQ_API_KEYS in your .env file.");
+          }
+        } else {
+          throw new Error("Grok API key not found. Set VITE_GROQ_API_KEY, VITE_GROK_API_KEY, or VITE_GROQ_API_KEYS in your .env file.");
+        }
       }
 
       // We'll call the Grok chat completions endpoint similarly to OpenAI's chat API.

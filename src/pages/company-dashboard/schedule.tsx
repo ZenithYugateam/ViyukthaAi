@@ -478,15 +478,16 @@ const CreateScheduleModal: React.FC<{
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[90vh] bg-background rounded-lg shadow-2xl z-50 overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-semibold">Schedule New Interview</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+        <div className="flex items-center justify-between p-6 border-b bg-card">
+          <h2 className="text-xl font-semibold text-foreground">Schedule New Interview</h2>
+          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-muted">
             <X className="h-5 w-5" />
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="candidateName">
@@ -609,7 +610,7 @@ const CreateScheduleModal: React.FC<{
             />
           </div>
 
-          <div className="flex gap-2 pt-4">
+          <div className="flex gap-3 pt-4 border-t sticky bottom-0 bg-background pb-2">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>

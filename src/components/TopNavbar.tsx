@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import femaleAvatar from "@/assets/female-avatar.jpg";
+import maleAvatar from "@/assets/male-avatar.jpg";
 
 export const TopNavbar = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export const TopNavbar = () => {
       <div className="flex items-center justify-between h-full px-4 md:px-6">
         {/* Welcome Section */}
         <div className="animate-fade-in ml-12 md:ml-0">
-          <h2 className="text-base md:text-xl font-semibold text-foreground">Welcome back, Priya! 👋</h2>
+          <h2 className="text-base md:text-xl font-semibold text-foreground">Welcome back, Prabhas! 👋</h2>
           <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
             Here's what's happening with your job search
           </p>
@@ -89,7 +89,7 @@ export const TopNavbar = () => {
           {/* Profile Avatar - Clickable */}
           <div className="flex items-center gap-2 md:gap-3 ml-2 pl-2 md:pl-4 border-l border-border/50">
             <div className="text-right hidden lg:block">
-              <p className="text-sm font-medium text-foreground">Priya Sharma</p>
+              <p className="text-sm font-medium text-foreground">Prabhas Satti</p>
               <p className="text-xs text-muted-foreground">Computer Science</p>
             </div>
             <Button
@@ -99,7 +99,7 @@ export const TopNavbar = () => {
               title="Go to Profile"
             >
               <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-primary/20 group-hover:border-primary transition-all duration-200 cursor-pointer">
-                <AvatarImage src={femaleAvatar} alt="Profile" />
+                <AvatarImage src={maleAvatar} alt="Profile" />
                 <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/20 text-primary-foreground font-semibold text-sm md:text-base">
                   PS
                 </AvatarFallback>

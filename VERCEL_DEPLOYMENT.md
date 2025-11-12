@@ -30,7 +30,7 @@ vercel
 **CRITICAL**: You must add all environment variables in Vercel Dashboard:
 
 1. Go to your project in Vercel Dashboard
-2. Click **Settings** GåÆ **Environment Variables**
+2. Click **Settings** â†’ **Environment Variables**
 3. Add the following variables:
 
 ### Required Environment Variables:
@@ -45,12 +45,12 @@ VITE_SUPABASE_URL=https://ybpnizylrmsilnmlzslz.supabase.co
 
 **Option 1: Multiple keys (comma-separated) - RECOMMENDED**
 ```
-VITE_GROQ_API_KEYS=your_groq_api_key_here,your_groq_api_key_2,your_groq_api_key_3,your_groq_api_key_4
+VITE_GROQ_API_KEYS=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,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,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,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
 ```
 
 **Option 2: Single key**
 ```
-VITE_GROQ_API_KEY=your_groq_api_key_here
+VITE_GROQ_API_KEY=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
 ```
 
 ### Optional Environment Variables:
@@ -93,7 +93,7 @@ VITE_DEVELOPER_MODE=false
    }
    ```
 3. **In Vercel Dashboard**:
-   - Go to **Settings** GåÆ **General**
+   - Go to **Settings** â†’ **General**
    - Scroll to **Build & Development Settings**
    - Make sure **Framework Preset** is set to **Vite** (or **Other**)
    - Verify **Output Directory** is set to `dist`

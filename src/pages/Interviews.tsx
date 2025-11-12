@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Check, Code2, Coffee, Sparkles, Settings, ArrowRight, Clock, Award, Briefcase, History } from "lucide-react";
 import interviewIllustration from "@/assets/interview-illustration.jpg";
 import { InterviewHistory } from "@/components/interview/InterviewHistory";
@@ -19,6 +20,8 @@ const Interviews = () => {
   const [numQuestions, setNumQuestions] = useState("5");
   const [interviewLevel, setInterviewLevel] = useState("intermediate");
   const [interviewCategory, setInterviewCategory] = useState("general");
+  const [customCategory, setCustomCategory] = useState("");
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [hasResume, setHasResume] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState("");
@@ -37,21 +40,39 @@ const Interviews = () => {
   };
 
   const handleStartInterview = () => {
+    // Use custom category if custom is selected, otherwise use selected category
+    const finalCategory = isCustomCategory && customCategory.trim() 
+      ? customCategory.trim().toLowerCase().replace(/\s+/g, '-')
+      : interviewCategory;
+    
     console.log("Starting interview with:", {
       numQuestions,
       interviewLevel,
-      interviewCategory,
+      interviewCategory: finalCategory,
+      isCustomCategory,
+      customCategory: isCustomCategory ? customCategory : null,
       hasResume,
       resumeFile,
       jobDescription,
     });
     // Pass the selected category and settings to the permissions test page
     const params = new URLSearchParams({
-      category: interviewCategory,
+      category: finalCategory,
       level: interviewLevel,
       questions: numQuestions
     });
     window.location.href = `/permissions-test?${params.toString()}`;
+  };
+
+  const handleCategoryChange = (value: string) => {
+    if (value === "custom") {
+      setIsCustomCategory(true);
+      setInterviewCategory("custom");
+    } else {
+      setIsCustomCategory(false);
+      setInterviewCategory(value);
+      setCustomCategory("");
+    }
   };
 
   const resolvePublicUrl = (path: string) => {
@@ -550,26 +571,41 @@ const Interviews = () => {
               {/* Interview Category */}
               <div className="space-y-3">
                 <Label className="text-gray-900 font-semibold text-base">Interview Category</Label>
-                <RadioGroup value={interviewCategory} onValueChange={setInterviewCategory}>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { value: "general", label: "General" },
-                      { value: "python", label: "Python" },
-                      { value: "java", label: "Java" },
-                      { value: "react", label: "React" },
-                      { value: "javascript", label: "JavaScript" },
-                      { value: "sql", label: "SQL" },
-                      { value: "fullstack", label: "Full Stack" },
-                    ].map((category) => (
-                      <div key={category.value} className="flex items-center space-x-2">
-                        <RadioGroupItem value={category.value} id={category.value} />
-                        <Label htmlFor={category.value} className="text-gray-700 cursor-pointer font-normal">
-                          {category.label}
-                        </Label>
-                      </div>
-                    ))}
+                <Select value={isCustomCategory ? "custom" : interviewCategory} onValueChange={handleCategoryChange}>
+                  <SelectTrigger className="w-full bg-white border-gray-300 text-gray-900">
+                    <SelectValue placeholder="Select interview category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="python">Python</SelectItem>
+                    <SelectItem value="java">Java</SelectItem>
+                    <SelectItem value="react">React</SelectItem>
+                    <SelectItem value="javascript">JavaScript</SelectItem>
+                    <SelectItem value="sql">SQL</SelectItem>
+                    <SelectItem value="fullstack">Full Stack</SelectItem>
+                    <SelectItem value="custom">Custom (Type your own)</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                {/* Custom Category Input */}
+                {isCustomCategory && (
+                  <div className="mt-3 space-y-2">
+                    <Label htmlFor="custom-category" className="text-gray-900 font-semibold text-sm">
+                      Enter Custom Category
+                    </Label>
+                    <Input
+                      id="custom-category"
+                      type="text"
+                      placeholder="e.g., Machine Learning, DevOps, Data Science..."
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      className="w-full bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Enter a custom interview category. The AI will tailor questions based on your input.
+                    </p>
                   </div>
-                </RadioGroup>
+                )}
               </div>
 
               {/* Resume Upload */}
@@ -623,10 +659,16 @@ const Interviews = () => {
               {/* Start Interview Button */}
               <Button
                 onClick={handleStartInterview}
-                className="w-full h-14 gradient-primary hover:gradient-primary-hover text-white font-semibold rounded-xl transition-all shadow-sm hover:shadow-md text-lg"
+                disabled={isCustomCategory && !customCategory.trim()}
+                className="w-full h-14 gradient-primary hover:gradient-primary-hover text-white font-semibold rounded-xl transition-all shadow-sm hover:shadow-md text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Start Interview
               </Button>
+              {isCustomCategory && !customCategory.trim() && (
+                <p className="text-sm text-red-500 text-center mt-2">
+                  Please enter a custom category to continue
+                </p>
+              )}
             </div>
           </div>
             </div>
