@@ -442,10 +442,10 @@ ${extractedTextLocal}
 
       // Grok endpoint and key from environment
       const GROK_URL = "https://api.groq.com/openai/v1/chat/completions";
-      const GROK_KEY = "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";
+      const GROK_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_API_KEY;
 
       if (!GROK_KEY) {
-        throw new Error("Grok API key not found. Set VITE_GROK_API_KEY in your .env file.");
+        throw new Error("Grok API key not found. Set VITE_GROQ_API_KEY or VITE_GROK_API_KEY in your .env file.");
       }
 
       // We'll call the Grok chat completions endpoint similarly to OpenAI's chat API.
