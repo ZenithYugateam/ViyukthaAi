@@ -41,23 +41,66 @@ const TokensPage: React.FC = () => {
   }, []);
 
   const handlePurchase = async (packageId: string) => {
-    setPurchasing(true);
-    
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    const success = tokenSystem.purchaseTokens(packageId);
-    
-    if (success) {
-      const pkg = TOKEN_PACKAGES.find((p) => p.id === packageId);
-      toast.success(`Successfully purchased ${pkg?.name}! ${pkg?.tokens} tokens added to your account.`);
-      refreshData();
-    } else {
-      toast.error("Purchase failed. Please try again.");
+  setPurchasing(true);
+
+  try {
+    const pkg = TOKEN_PACKAGES.find((p) => p.id === packageId);
+    if (!pkg) {
+      toast.error("Invalid package selected.");
+      setPurchasing(false);
+      return;
     }
-    
-    setPurchasing(false);
-  };
+
+    const amountInPaise = pkg.price * 100;
+   
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_API_KEY, 
+      amount: amountInPaise,
+      currency: "INR",
+      name: "ZenithYuga Tokens",
+      description: `Purchase of ${pkg.tokens} tokens`,
+      image: "https://your-logo-url.png", 
+      handler: function (response: any) {
+
+        console.log("Payment Success:", response);
+
+        const success = tokenSystem.purchaseTokens(packageId);
+
+        if (success) {
+          toast.success(
+            `Successfully purchased ${pkg?.name}! ${pkg?.tokens} tokens added to your account.`
+          );
+          refreshData();
+        } else {
+          toast.error("Token update failed. Please try again.");
+        }
+      },
+
+      prefill: {
+        name: "Demo User",
+        email: "demo@example.com",
+        contact: "9999999999",
+      },
+      theme: {
+        color: "#6d28d9",
+      },
+      modal: {
+        ondismiss: () => {
+          toast.error("Payment cancelled.");
+          setPurchasing(false);
+        },
+      },
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    rzp.open();
+  } catch (error) {
+    console.error(error);
+    toast.error("Payment failed. Please try again.");
+  }
+
+  setPurchasing(false);
+};
 
   const usagePercentage = balance.total > 0 ? (balance.used / balance.total) * 100 : 0;
 
